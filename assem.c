@@ -1,5 +1,5 @@
 /* The main file for the project - The assembler. */
-/* Date of creation - 3/7/2000 */
+/* Date of creation - 3/7/24 */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,16 +8,13 @@
 
 
 int main(int argc, char *argv[]) {
-    char *as_file , *am_file;
-    int index=1;
+    char * raw_file_name;
     /* Iterating through all the given files. */
     while(--argc > 0){
-        printf("Pre Assembling file: %s\n", argv[index]);
-        as_file = add_file_extension(argv[index++],AS_EXTENSION);
-        printf("%s\n",as_file);
-
+        printf("Pre Assembling file: %s\n", argv[argc]);
+        raw_file_name = argv[argc];
         /* In case there was an error while reading a file, continue. */
-        if (!start_pre_assem(as_file)){
+        if (!start_pre_assem(raw_file_name)){
             continue;
         }
     }
