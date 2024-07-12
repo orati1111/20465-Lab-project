@@ -3,7 +3,10 @@
 #ifndef PRE_ASSEM
 #define PRE_ASSEM
 
-void read_test(char* );
-int start_pre_assem(char * );
+#include "data_structures.h"
+
+int start_pre_assem(char *);
+
+int add_macros_to_list(FILE *, Node **);
 
 #endif

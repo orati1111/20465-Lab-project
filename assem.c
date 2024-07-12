@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
         printf("Pre Assembling file: %s\n", argv[argc]);
         raw_file_name = argv[argc];
         /* In case there was an error while reading a file, continue. */
-        if (!start_pre_assem(raw_file_name)){
+        if (start_pre_assem(raw_file_name) == false){
             continue;
         }
     }
