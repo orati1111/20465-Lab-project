@@ -7,7 +7,8 @@
 #define AS_EXTENSION ".as"
 #define AM_EXTENSION ".am"
 #define MAX_CHAR_IN_LINE 81
-#define RESERVED_WORDS_NUMBER 25
+#define RESERVED_WORDS_NUMBER 26
+#define MAX_MSG_LENGTH 256
 
 typedef enum {
     false,

@@ -6,6 +6,7 @@
 #include <string.h>
 #include "utils.h"
 #include "pre_assem.h"
+#include "errors.h"
 
 int start_pre_assem(char *file_name) {
     Node *head = NULL;
@@ -19,7 +20,7 @@ int start_pre_assem(char *file_name) {
     fp_as = fopen(as_file, "r");
     /* In case the file doesn't exist/couldn't open it. */
     if (fp_as == NULL) {
-        /* TODO: generate error - couldn't find file */
+        generate_error(ERROR_COULDNT_OPEN_FILE,0);
         return false;
     }
 
@@ -50,10 +51,40 @@ int add_macros_to_list(FILE * fp, Node ** head){
 
         if(strcmp(strtok(buffer," "), "macr") == 0){
             current_macro_line = line_number;
+            /* Getting the remainder of the macro declaration. */
+            macro_name = strtok(NULL," \n");
+            /* Checking if the macro name is empty */
+            if(macro_name == NULL){
+                generate_error(ERROR_INVALID_MACRO_DECL,line_number);
+                return false;
+            }
+
+            /* Checking if the given macro name is a reserved word */
+            /* TODO: remove the spaces if there are any in the macro name and then check for reserved words */
+            if(is_macro_name_legal(macro_name) == true){
+                generate_error(ERROR_ILLEGAL_MACRO_NAME,line_number);
+                return false;
+            }
+            remaining = strtok(NULL,"\n");
+            /* Checking if there is extra text after the macro declaration. */
+            if (remaining != NULL){
+                generate_error(ERROR_EXTRA_TEXT_AFTER_DECL,line_number);
+                return false;
+            }
+
+            /* All is clear to continue saving the macro into the linked list */
+            fgetpos(fp, &pos);
+            macro_content = save_macro_content(fp,&pos,&line_number);
+
+
 
         }
     }
     return true;
+
+}
+
+char * save_macro_content(FILE * fp, fpos_t * pos, int * line_number){
 
 }
 

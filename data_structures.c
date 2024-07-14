@@ -6,25 +6,18 @@
 #include <stdlib.h>
 #include "data_structures.h"
 #include "utils.h"
+#include "errors.h"
 
 Node *create_node(char *macr_name, char *macr_content, int line_number) {
     Node *new_node = NULL;
     new_node = generalized_malloc(sizeof(Node));
+    /* Setting the attributes of the new node to the given arguments. */
+    new_node->macr_name = macr_name;
+    new_node->marc_content = macr_content;
+    new_node->line_number = line_number;
+    new_node->next = NULL;
+    return new_node;
 
-    /* Checking if the given name of the macro is legal. */
-    if (is_macro_name_legal(macr_name) == true) {
-        /* TODO: generate error - illegal name */
-        free(new_node);
-        return NULL;
-    }
-        /* Setting the attributes of the new node to the given arguments. */
-    else {
-        new_node->macr_name = macr_name;
-        new_node->marc_content = macr_content;
-        new_node->line_number = line_number;
-        new_node->next = NULL;
-        return new_node;
-    }
 }
 
 Node *search_node(Node *head, char *macr_name, int *found) {
@@ -36,8 +29,6 @@ Node *search_node(Node *head, char *macr_name, int *found) {
     /* Iterating the linked list */
     while (temp != NULL) {
         if (strcmp(temp->macr_name, macr_name) == 0) {
-            /* TODO: generate error - macro already in list */
-            printf("Error\n");
             *found = true;
             return temp;
         }
