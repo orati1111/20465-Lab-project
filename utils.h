@@ -13,12 +13,17 @@
 typedef enum {
     false,
     true
-} bool ;
+} bool;
 
-char * add_file_extension(char *, char *);
-void * generalized_malloc(long);
+char *add_file_extension(char *, char *);
+
+void *generalized_malloc(long);
+
 bool is_macro_name_legal(char *);
 
+char * remove_spaces(const char *);
 
+char *copy_text(FILE *, fpos_t *, unsigned long long);
 
+bool remove_all_macro_decl(char * , char *);
 #endif

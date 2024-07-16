@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     int index = 1;
     /* Iterating through all the given files. */
     while(--argc > 0){
-        printf("Pre Assembling file: %s\n", argv[index]);
+        printf("\nPre Assembling file: %s\n", argv[index]);
         raw_file_name = argv[index++];
         /* In case there was an error while reading a file, continue. */
         if (start_pre_assem(raw_file_name) == false){

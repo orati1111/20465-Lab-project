@@ -6,15 +6,15 @@
 #include <stdlib.h>
 #include "data_structures.h"
 #include "utils.h"
-#include "errors.h"
 
-Node *create_node(char *macr_name, char *macr_content, int line_number) {
+
+Node *create_node(char *macr_name, char *macr_content, int start_decl_line) {
     Node *new_node = NULL;
     new_node = generalized_malloc(sizeof(Node));
     /* Setting the attributes of the new node to the given arguments. */
     new_node->macr_name = macr_name;
     new_node->marc_content = macr_content;
-    new_node->line_number = line_number;
+    new_node->start_decl_line = start_decl_line;
     new_node->next = NULL;
     return new_node;
 
@@ -39,32 +39,44 @@ Node *search_node(Node *head, char *macr_name, int *found) {
 
 }
 
-void add_node(Node **head_ptr, char *name, char *content, int line_number) {
-    int found;
+void add_node(Node **head_ptr, char *name, char *content, int start_decl_line) {
     Node *new_node = NULL, *temp = NULL;
-    found = false;
-
-    temp = search_node(*head_ptr, name, &found);
-
-    /* TODO: Check if the given content of the macro isn't the same as the already found macro content. */
-
-    if (found == false) {
-        new_node = create_node(name, content, line_number);
-        /* The list is empty. */
-        if (*head_ptr == NULL)
-            *head_ptr = new_node;
-            /* The marco isn't in the list. */
-        else if (temp == NULL) {
-            temp = *head_ptr;
-            while (temp->next != NULL)
-                temp = temp->next;
-            temp->next = new_node;
-        }
+    temp = *head_ptr;
+    new_node = create_node(name, content, start_decl_line);
+    /* The list is empty. */
+    if (*head_ptr == NULL)
+        *head_ptr = new_node;
+        /* Otherwise */
+    else {
+        while (temp->next != NULL)
+            temp = temp->next;
+        temp->next = new_node;
     }
+    log_print_list(head_ptr);
+
 }
 
+
 void free_node(Node *node) {
-    free(node->macr_name);
-    free(node->marc_content);
-    free(node);
+    Node *temp = node;
+    while (temp != NULL) {
+        free(temp->macr_name);
+        free(temp->marc_content);
+        temp = temp->next;
+    }
+    while (node != NULL) {
+        temp = node;
+        node = node->next;
+        free(temp);
+    }
+}
+void log_print_list(Node ** head){
+    Node *temp;
+    temp = *head;
+    while(temp != NULL){
+        printf("\nStart at:%d\nMacro name: '%s'\n",temp->start_decl_line,temp->macr_name);
+        printf("Macro content: '%s'",temp->marc_content);
+        temp = temp->next;
+    }
+    printf("\n\n---END OF LIST---\n\n");
 }
