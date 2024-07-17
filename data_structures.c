@@ -52,7 +52,7 @@ void add_node(Node **head_ptr, char *name, char *content, int start_decl_line) {
             temp = temp->next;
         temp->next = new_node;
     }
-    log_print_list(head_ptr);
+   /* log_print_list(head_ptr); */
 
 }
 

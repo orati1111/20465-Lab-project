@@ -2,7 +2,6 @@
 /* Date of creation - 3/7/24 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include "pre_assem.h"
 #include "utils.h"
 

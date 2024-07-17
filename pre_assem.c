@@ -10,36 +10,43 @@
 
 int start_pre_assem(char *file_name) {
     Node *head = NULL;
-    char *am_file;
+    char *tmp_file;
     char *as_file;
     FILE *fp_as = NULL;
-    FILE *fp_am = NULL;
 
     /* Add the as extension to the file name in order to open it. */
     as_file = add_file_extension(file_name, AS_EXTENSION);
-    am_file = add_file_extension(file_name, AM_EXTENSION);
+    tmp_file = add_file_extension(file_name, TMP_EXTENSION);
     fp_as = fopen(as_file, "r");
     /* In case the file doesn't exist/couldn't open it. */
-    /* TODO: remember to delete am file after an error */
     if (fp_as == NULL) {
         generate_error(ERROR_COULDNT_OPEN_FILE, -1);
+        free(as_file);
+        free(tmp_file);
         return false;
     }
 
-    if(add_macros_to_list(fp_as,&head)==false){
+    if (add_macros_to_list(fp_as, &head) == false) {
         free_node(head);
+        free(as_file);
+        free(tmp_file);
         fclose(fp_as);
         return false;
     }
 
-    if(remove_all_macro_decl(as_file,am_file) == false){
+    if(remove_and_replace_macros(fp_as, tmp_file, file_name, &head) == false){
+        free_node(head);
+        free(as_file);
+        free(tmp_file);
         fclose(fp_as);
         return false;
     }
-    /* TODO: look for macro names and replace them with the content */
 
     fclose(fp_as);
     free_node(head);
+    free(as_file);
+    free(tmp_file);
+    remove(tmp_file);
     return true;
 }
 
@@ -94,8 +101,8 @@ int add_macros_to_list(FILE *fp, Node **head) {
             if (macro_content == NULL)
                 return false;
 
-            fsetpos(fp,&pos);
-            add_node(head,macro_name,macro_content,current_macro_line);
+            fsetpos(fp, &pos);
+            add_node(head, macro_name, macro_content, current_macro_line);
         }
     }
 
@@ -114,7 +121,8 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         return NULL;
     }
 
-    while (fgets(content, MAX_CHAR_IN_LINE, fp) && !(((strcmp(content, "endmacr\n")) != 0) ^ (strcmp(content,"endmacr") != 0))) {
+    while (fgets(content, MAX_CHAR_IN_LINE, fp) &&
+           !(((strcmp(content, "endmacr\n")) != 0) ^ (strcmp(content, "endmacr") != 0))) {
         (*line_number)++;
         if ((strstr(content, "endmacr") != NULL) && strlen(content) != strlen("endmacr ")) {
             generate_error(ERROR_EXTRA_TEXT_AFTER_ENDMACR, *line_number);
@@ -125,7 +133,7 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         }
 
     }
-    temp = copy_text(fp,pos,content_length);
+    temp = copy_text(fp, pos, content_length);
     return temp;
 
 }
