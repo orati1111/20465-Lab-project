@@ -14,7 +14,7 @@ int start_pre_assem(char *file_name) {
     char *as_file;
     FILE *fp_as = NULL;
 
-    /* Add the as extension to the file name in order to open it. */
+    /* Add the as extensions to the file name in order to open it. */
     as_file = add_file_extension(file_name, AS_EXTENSION);
     tmp_file = add_file_extension(file_name, TMP_EXTENSION);
     fp_as = fopen(as_file, "r");
@@ -25,7 +25,7 @@ int start_pre_assem(char *file_name) {
         free(tmp_file);
         return false;
     }
-
+    /* Add macros to the list */
     if (add_macros_to_list(fp_as, &head) == false) {
         free_node(head);
         free(as_file);
@@ -33,8 +33,8 @@ int start_pre_assem(char *file_name) {
         fclose(fp_as);
         return false;
     }
-
-    if(remove_and_replace_macros(fp_as, tmp_file, file_name, &head) == false){
+    /* Remove all the macro declaration and replace the macro calls with its content */
+    if (remove_and_replace_macros(fp_as, tmp_file, file_name, &head) == false) {
         free_node(head);
         free(as_file);
         free(tmp_file);
@@ -54,7 +54,6 @@ int add_macros_to_list(FILE *fp, Node **head) {
     char buffer[MAX_CHAR_IN_LINE];
     char *macro_name, *macro_content, *temp_macro_name;
     int line_number = 0;
-    int current_macro_line;
     int found_macro = false;
     fpos_t pos;
     char *remaining;
@@ -63,7 +62,6 @@ int add_macros_to_list(FILE *fp, Node **head) {
     while (fgets(buffer, MAX_CHAR_IN_LINE, fp)) {
         line_number++;
         if (strcmp(strtok(buffer, " "), "macr") == 0) {
-            current_macro_line = line_number;
             /* Getting the remainder of the macro declaration. */
             temp_macro_name = strtok(NULL, " \n");
 
@@ -76,7 +74,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Removing the spaces from the macro name (if there are any) */
             macro_name = remove_spaces(temp_macro_name);
             /* Checking if the given macro name is a reserved word. */
-            if (is_macro_name_legal(macro_name)) {
+            if (is_macro_name_legal(macro_name) == false) {
                 generate_error(ERROR_ILLEGAL_MACRO_NAME, line_number);
                 return false;
             }
@@ -102,7 +100,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
                 return false;
 
             fsetpos(fp, &pos);
-            add_node(head, macro_name, macro_content, current_macro_line);
+            add_node(head, macro_name, macro_content);
         }
     }
 
@@ -116,23 +114,27 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
     char *temp = NULL;
     content[0] = '\0';
 
+    /* Setting the position of the pointer in the file to the correct place */
     if (fsetpos(fp, pos) != 0) {
         generate_error(ERROR_COULDNT_SET_POS_POINTER, *line_number);
         return NULL;
     }
-
+    /* While reading the content of the file, look for endmacr */
     while (fgets(content, MAX_CHAR_IN_LINE, fp) &&
            !(((strcmp(content, "endmacr\n")) != 0) ^ (strcmp(content, "endmacr") != 0))) {
         (*line_number)++;
+        /* In case endmacr is a part of the string but there are extra text after it */
         if ((strstr(content, "endmacr") != NULL) && strlen(content) != strlen("endmacr ")) {
             generate_error(ERROR_EXTRA_TEXT_AFTER_ENDMACR, *line_number);
             return NULL;
         }
+        /* Reaching endmacr - enlarge the content length to fit the size of the content */
         if (strcmp(content, "endmacr\n") != 0) {
             content_length += strlen(content);
         }
 
     }
+    /* Copy the content of the macro */
     temp = copy_text(fp, pos, content_length);
     return temp;
 

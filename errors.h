@@ -6,6 +6,7 @@
 
 #include "utils.h"
 
+/* Defines */
 #define ERR_MSG_ILLEGAL_MACRO_NAME "Illegal macro name."
 #define ERR_MSG_INVALID_MACRO_DECL "Invalid macro declaration."
 #define ERR_MSG_COULDNT_OPEN_FILE "Couldn't open the file given."
@@ -16,6 +17,7 @@
 #define ERR_MSG_MACRO_ALREADY_EXISTS "Attempt to declare a macro with name that already exists in the macro list."
 #define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
 
+/* The Error to number mapping */
 enum {
     /* Macro Errors */
     ERROR_ILLEGAL_MACRO_NAME = 0,
@@ -35,11 +37,20 @@ enum {
 
 };
 
+/* Struct to define the error mapping
+ * error_number - The number of the error.
+ * error_message - The error itself.
+ */
 typedef struct error_mapping {
     int error_number;
     char error_message[MAX_MSG_LENGTH];
 } error_mapping;
 
-void generate_error(int, int);
+/*
+ * Function that generates the error.
+ * @param error_number - The number of the error (defined at the top of the file).
+ * @param line_number - The line in which the error occurred (-1 if it wasn't line related.)
+ */
+void generate_error(int error_number, int line_number);
 
 #endif
