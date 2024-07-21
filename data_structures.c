@@ -80,3 +80,19 @@ void log_print_list(Node **head) {
     }
     printf("\n\n---END OF LIST---\n\n");
 }
+
+void init_code_word(code_word * word){
+    word->bits[0] = 0;
+    word->bits[1] = 0;
+}
+
+void print_bits(code_word word) {
+    int i;
+    int byte_index, bit_index,bit;
+    for (i = 15; i >= 0; --i) {
+        byte_index = i / 8;
+        bit_index = i % 8;
+        bit = (word.bits[byte_index] >> bit_index) & 1;
+        printf("%d", bit);
+    }
+}

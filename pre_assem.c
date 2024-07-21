@@ -9,7 +9,7 @@
 #include "errors.h"
 
 int start_pre_assem(char *file_name) {
-    Node *head = NULL;
+    Node *macro_head = NULL;
     char *tmp_file;
     char *as_file;
     FILE *fp_as = NULL;
@@ -26,16 +26,16 @@ int start_pre_assem(char *file_name) {
         return false;
     }
     /* Add macros to the list */
-    if (add_macros_to_list(fp_as, &head) == false) {
-        free_node(head);
+    if (add_macros_to_list(fp_as, &macro_head) == false) {
+        free_node(macro_head);
         free(as_file);
         free(tmp_file);
         fclose(fp_as);
         return false;
     }
     /* Remove all the macro declaration and replace the macro calls with its content */
-    if (remove_and_replace_macros(fp_as, tmp_file, file_name, &head) == false) {
-        free_node(head);
+    if (remove_and_replace_macros(fp_as, tmp_file, file_name, &macro_head) == false) {
+        free_node(macro_head);
         free(as_file);
         free(tmp_file);
         fclose(fp_as);
@@ -43,7 +43,7 @@ int start_pre_assem(char *file_name) {
     }
 
     fclose(fp_as);
-    free_node(head);
+    free_node(macro_head);
     free(as_file);
     free(tmp_file);
     remove(tmp_file);
@@ -78,6 +78,9 @@ int add_macros_to_list(FILE *fp, Node **head) {
                 generate_error(ERROR_ILLEGAL_MACRO_NAME, line_number);
                 return false;
             }
+            if(strlen(macro_name) > MAX_MACRO_LENGTH){
+                generate_error(ERROR_LONG_MACRO_NAME,line_number);
+            }
             search_node(*head, macro_name, &found_macro);
             /* Checking if the macro name already exists */
             if (found_macro) {
@@ -100,6 +103,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
                 return false;
 
             fsetpos(fp, &pos);
+            /* TODO: Create a node first and then add node*/
             add_node(head, macro_name, macro_content);
         }
     }

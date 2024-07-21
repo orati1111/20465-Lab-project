@@ -16,6 +16,7 @@
 #define ERR_MSG_EXTRA_TEXT_AFTER_ENDMACR "Extra text after the end of macro declaration."
 #define ERR_MSG_MACRO_ALREADY_EXISTS "Attempt to declare a macro with name that already exists in the macro list."
 #define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
+#define ERR_MSG_LONG_MACRO_NAME "The macro name given is too long (exceeds 31) "
 
 /* The Error to number mapping */
 enum {
@@ -25,6 +26,7 @@ enum {
     ERROR_EXTRA_TEXT_AFTER_ENDMACR,
     ERROR_INVALID_MACRO_DECL,
     ERROR_MACRO_ALREADY_EXISTS,
+    ERROR_LONG_MACRO_NAME,
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,

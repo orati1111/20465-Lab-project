@@ -6,6 +6,11 @@
 
 #include "utils.h"
 
-bool start_first_pass(char *);
+/*
+ * Function that starts the first pass for a given file.
+ * @param file_name - the file name of the file to first pass on.
+ * @return True if the first pass succeeded , False otherwise.
+ */
+bool start_first_pass(char * file_name);
 
-#endif //FIRST_PASS_H
+#endif
