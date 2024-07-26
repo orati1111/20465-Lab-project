@@ -17,6 +17,8 @@
 #define ERR_MSG_MACRO_ALREADY_EXISTS "Attempt to declare a macro with name that already exists in the macro list."
 #define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
 #define ERR_MSG_LONG_MACRO_NAME "The macro name given is too long (exceeds 31) "
+#define ERR_MSG_COULDNT_CREATE_MACRO_NODE "Couldn't create a node in the linked list for the macro."
+#define ERR_MSG_REALLOC_FAILED "Reallocating memory failed."
 
 /* The Error to number mapping */
 enum {
@@ -27,6 +29,7 @@ enum {
     ERROR_INVALID_MACRO_DECL,
     ERROR_MACRO_ALREADY_EXISTS,
     ERROR_LONG_MACRO_NAME,
+    ERROR_COULDNT_CREATE_MACRO_NODE,
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,
@@ -35,6 +38,7 @@ enum {
 
     /* Memory Errors */
     ERROR_MALLOC_FAILED,
+    ERROR_REALLOC_FAILED
 
 
 };
@@ -43,10 +47,10 @@ enum {
  * error_number - The number of the error.
  * error_message - The error itself.
  */
-typedef struct error_mapping {
+typedef struct errorMapping {
     int error_number;
     char error_message[MAX_MSG_LENGTH];
-} error_mapping;
+} errorMapping;
 
 /*
  * Function that generates the error.

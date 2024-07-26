@@ -4,14 +4,13 @@
 #include <stdio.h>
 #include "pre_assem.h"
 #include "first_pass.h"
-#include "utils.h"
 
 
 int main(int argc, char *argv[]) {
     char *raw_file_name;
     int index = 1;
     /* Iterating through all the given files. */
-    while (--argc > 0) {
+    while (index < argc) {
         raw_file_name = argv[index++];
         printf("\nPre Assembling file: %s\n", raw_file_name);
         /* In case there was an error while reading a file, continue. */
@@ -19,6 +18,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         printf("\nFirst Passing file: %s\n", raw_file_name);
+
         if (start_first_pass(raw_file_name) == false) {
             continue;
         }

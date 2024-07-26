@@ -17,8 +17,6 @@ bool start_first_pass(char *file_name) {
     char buffer[MAX_CHAR_IN_LINE];
     char cpy[MAX_CHAR_IN_LINE];
 
-    table *extern_table;
-    table *entry_table;
 
     am_file = add_file_extension(file_name, AM_EXTENSION);
     fp_am = fopen(am_file, "r");
@@ -28,8 +26,8 @@ bool start_first_pass(char *file_name) {
         generate_error(ERROR_COULDNT_OPEN_FILE, -1);
         return false;
     }
-
-
+    free(am_file);
+    /* TODO: change function */
     fseek(fp_am, 0, SEEK_SET);
     /* Read the file content */
     while(fgets(buffer,MAX_CHAR_IN_LINE,fp_am) != NULL){
@@ -41,7 +39,7 @@ bool start_first_pass(char *file_name) {
         if(strchr(buffer,'.')){
             /* Looking for the substring .entry or .extern */
             if(strstr(buffer,".extern") || strstr(buffer,".entry")){
-
+                continue;
             }
         }
     }

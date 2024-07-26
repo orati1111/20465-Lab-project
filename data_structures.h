@@ -4,7 +4,7 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
-#include "utils.h"
+#include "globals.h"
 
 /*
  * Struct that represents the node and its attributes:
@@ -32,6 +32,7 @@ typedef struct macro_node {
  * Struct that represents the label node.
  * label_name - The name of the label to store.
  * address - The memory address of the label (starts at 100)
+ * label_type - The type of the label.
  */
 typedef struct label_node {
     char *label_name;
@@ -46,7 +47,7 @@ typedef struct label_node {
  * 7 - 10 bits - Source Operand.
  * 11 - 14 bits - The binary representation of the Opcode (0-15).
  */
-typedef struct code_word {
+typedef struct codeWord {
     unsigned char bits[2];
 } codeWord;
 
@@ -60,14 +61,21 @@ typedef struct code_word {
 Node *create_node(void *data, size_t size_of_data, nodeType node_type);
 
 /*
+ * Function that creates the macro node itself.
+ * @param macro_name - The name of the macro.
+ * @param macro_content - The content of the macro.
+ * @return Pointer to the created node.
+ */
+macroNode *create_macro_node(char * macro_name, char * macro_content);
+
+/*
  * Function that searches a node by its name.
  * @param head - Pointer to the head of the list.
  * @param name - The name to find in the linked list.
  * @param node_type - The type of the node to find.
- * @param found - Pointer to a flag that represents a node had been found.
  * @return Node, NULL otherwise.
  */
-Node *search_node(Node *head, char *name, nodeType node_type, int *found);
+Node *search_node(Node *head, char *name, nodeType node_type);
 
 /*
  * Function that adds a node to the list.
@@ -78,11 +86,11 @@ void add_node(Node **head, Node *node);
 
 /*
  * Function that frees the all the nodes and the content inside each node.
- * @param head - Pointer to the head of the list.
+ * @param head - Double pointer to the head of the list.
  * @param node_type - The type of nodes in the list.
- * @param content_only - A flag to specify to free only the macro content.
+ * @param type - A flag to specify what to free
  */
-void free_list(Node *head, nodeType node_type, bool content_only);
+void free_list(Node **head, nodeType node_type, freeType type);
 
 /*
  * Function that displays the list of macros node by node.
