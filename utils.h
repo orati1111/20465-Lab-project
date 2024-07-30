@@ -13,7 +13,8 @@
 #define TMP_EXTENSION ".tmp"
 
 /* Limiters */
-#define MAX_CHAR_IN_LINE 81
+#define MAX_CHAR_IN_LINE 82
+#define BUFFER_SIZE 256
 #define NUM_OF_OPS 16
 #define NUM_OF_REGISTERS 9
 #define MAX_MSG_LENGTH 256
@@ -30,11 +31,11 @@
 char *add_file_extension(char *base_file_name, char *extension);
 
 /*
- * Function that checks if a given macro name is legal.
- * @param macr_name - The macro name to check.
+ * Function that checks if a given name is legal.
+ * @param name - The name to check.
  * @return True if the name is legal, False otherwise.
  */
-bool is_macro_name_legal(char *macr_name);
+bool is_name_legal(char *name);
 
 /*
  * Function that replicates the strdup functionality(Which isn't C90).
@@ -50,6 +51,10 @@ char *strdupli(char *original);
  */
 char *remove_spaces(const char *str);
 
+void remove_leading_spaces(char * str);
+
+void remove_trailing_spaces(char * str);
+
 /*
  * Function that expands the macros, removes macro declarations and creates the am file.
  * @param fp_as - Pointer to the as file.
@@ -60,14 +65,12 @@ char *remove_spaces(const char *str);
 bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head);
 
 /*
- * Function that handles the removal and replacement of the macros content and the macros.
- * @param fp_as - Pointer to the 'as' file.
- * @param tmp_file - The temp file name to store the text after removing the macro declaration.
- * @param original_file_name - The original file name without the extension.
- * @param head - Pointer to the head of the linked list.
- * @return True if the both the replacement and removal succeeded, False otherwise.l
+ * Function that checks if there is extra text after a given pointer.
+ * @param ptr - Pointer to the location to start checking from.
+ * @param string - The string to check.
+ * @return True if there is, False otherwise.
  */
-bool remove_and_replace_macros(FILE *fp_as, char *tmp_file, char *original_file_name, Node *head);
+bool check_extra_text(char *ptr, char * string);
 
 /*
  * Function that converts the operation code into binary and stores it inside the appropriate place

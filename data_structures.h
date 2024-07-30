@@ -51,6 +51,25 @@ typedef struct codeWord {
     unsigned char bits[2];
 } codeWord;
 
+
+/*
+ * Structure that represents the parts of an instruction in the code.
+ *
+ */
+typedef struct instr {
+    char *label;
+} instrParts;
+
+/*
+ * Structure that represents the parts of a command in the code.
+ */
+
+typedef struct command {
+    char * label;
+    char * op_names;
+} commandParts;
+
+
 /*
  * Function that creates the node of the linked list.
  * @param data - Pointer to the data of the node to create
@@ -66,7 +85,16 @@ Node *create_node(void *data, size_t size_of_data, nodeType node_type);
  * @param macro_content - The content of the macro.
  * @return Pointer to the created node.
  */
-macroNode *create_macro_node(char * macro_name, char * macro_content);
+macroNode *create_macro_node(char *macro_name, char *macro_content);
+
+/*
+ * Function that creates the label node itself.
+ * @param label_name - The name of the label.
+ * @param address - The address in memory of the label.
+ * @param type - The type of label (extern, entry etc.)
+ * @return Pointer to the created node.
+ */
+labelNode *create_label_node(char *label_name, int address, labelType type);
 
 /*
  * Function that searches a node by its name.

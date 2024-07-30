@@ -18,7 +18,10 @@
 #define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
 #define ERR_MSG_LONG_MACRO_NAME "The macro name given is too long (exceeds 31) "
 #define ERR_MSG_COULDNT_CREATE_MACRO_NODE "Couldn't create a node in the linked list for the macro."
+#define ERR_MSG_LINE_TOO_LONG "The line exceeds the 80 characters limit."
 #define ERR_MSG_REALLOC_FAILED "Reallocating memory failed."
+#define ERR_MSG_LABEL_NAME_TOO_LONG "The label name exceeds the 31 characters limit."
+#define ERR_MSG_ILLEGAL_LABEL_NAME "Invalid label name."
 
 /* The Error to number mapping */
 enum {
@@ -30,6 +33,13 @@ enum {
     ERROR_MACRO_ALREADY_EXISTS,
     ERROR_LONG_MACRO_NAME,
     ERROR_COULDNT_CREATE_MACRO_NODE,
+
+    /* Line Errors */
+    ERROR_LINE_TOO_LONG,
+
+    /* Label Errors */
+    ERROR_LABEL_NAME_TOO_LONG,
+    ERROR_ILLEGAL_LABEL_NAME,
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,
@@ -55,8 +65,9 @@ typedef struct errorMapping {
 /*
  * Function that generates the error.
  * @param error_number - The number of the error (defined at the top of the file).
- * @param line_number - The line in which the error occurred (-1 if it wasn't line related.)
+ * @param line_number - The line number in which the error occurred (-1 if it wasn't line related.)
+ * @param line - The content of the line.
  */
-void generate_error(int error_number, int line_number);
+void generate_error(int error_number, int line_number, char * line);
 
 #endif

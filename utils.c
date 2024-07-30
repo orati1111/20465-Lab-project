@@ -29,7 +29,7 @@ char *add_file_extension(char *base_file_name, char *extension) {
     /* Malloc memory for the file name with the extension */
     finalized_file_name = (char *) malloc((finalized_length + 1) * sizeof(char));
     if (finalized_file_name == NULL) {
-        generate_error(ERROR_MALLOC_FAILED, -1);
+        generate_error(ERROR_MALLOC_FAILED, -1,"");
         free(finalized_file_name);
         return NULL;
     }
@@ -41,21 +41,21 @@ char *add_file_extension(char *base_file_name, char *extension) {
 
 }
 
-bool is_macro_name_legal(char *macr_name) {
+bool is_name_legal(char *name) {
     int index;
     /* Iterating the arrays and comparing the given name to the reserved names */
     /* Operations names: */
     for (index = 0; index < NUM_OF_OPS; index++) {
-        if (strcmp(op_names[index], macr_name) == 0)
+        if (strcmp(op_names[index], name) == 0)
             return false;
     }
     /* Registers names */
     for (index = 0; index < NUM_OF_REGISTERS; index++) {
-        if (strcmp(registers[index], macr_name) == 0)
+        if (strcmp(registers[index], name) == 0)
             return false;
     }
     /* Name as the macro declaration */
-    if (strcmp(macr_name, "macr") == 0)
+    if (strcmp(name, "macr") == 0)
         return false;
     return true;
 
@@ -87,9 +87,32 @@ char *remove_spaces(const char *str) {
     return result;
 }
 
+void remove_leading_spaces(char * str){
+    int i = 0, j=0;
+
+    if(str == NULL)
+        return;
+
+    while(str[i] && isspace(str[i]))
+        i++;
+
+    while(str[i])
+        str[j++] = str[i++];
+
+    str[j] = '\0';
+}
+
+void remove_trailing_spaces(char * str){
+    size_t length = strlen(str);
+    while(length > 0 && (str[length-1] == ' ' || str[length-1] == '\t' || str[length-1] == '\n')){
+        str[length-1] = '\0';
+        length--;
+    }
+}
+
 bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
-    char buffer[MAX_CHAR_IN_LINE];
-    char cpy[MAX_CHAR_IN_LINE];
+    char buffer[BUFFER_SIZE];
+    char cpy[BUFFER_SIZE];
     FILE *fp_am = NULL;
     char *am_file = NULL;
     char *token = NULL;
@@ -97,6 +120,7 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     Node *temp = NULL;
     macroNode *node = NULL;
     bool in_macr_decl = false;
+
     /* Setting the position of the as file to the start */
     fseek(fp_as, 0, SEEK_SET);
     am_file = add_file_extension(original_file_name, AM_EXTENSION);
@@ -107,16 +131,19 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     fp_am = fopen(am_file, "w");
     /* Couldn't open the file */
     if (fp_am == NULL) {
-        generate_error(ERROR_COULDNT_WRITE_AM_FILE, -1);
+        generate_error(ERROR_COULDNT_WRITE_AM_FILE, -1,"");
         remove(am_file);
         return false;
     }
     /* Reading the file */
-    while (fgets(buffer, MAX_CHAR_IN_LINE, fp_as)) {
+    while (fgets(buffer, BUFFER_SIZE, fp_as)) {
         strcpy(cpy, buffer);
-        token = strtok(cpy, " \n");
+        token = strtok(cpy," \n");
+        /* printf("'%s'\n",token); */
+        if(strcmp(token,"") == 0)
+            continue;
         /* Looking for the start of macro declaration */
-        if (strncmp(token, "macr", 4) == 0) {
+        if (strncmp(token, "macr", 4) == 0 && strlen(token) == strlen("macr")) {
             in_macr_decl = true;
             continue;
         }
@@ -135,7 +162,9 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
             }
                 /* Other */
             else {
-                fprintf(fp_am, "%s", buffer);
+                strcpy(cpy,buffer);
+                remove_leading_spaces(cpy);
+                fprintf(fp_am, "%s", cpy);
             }
         }
 
@@ -144,6 +173,13 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     free(am_file);
     return true;
 
+}
+
+bool check_extra_text(char *ptr, char * string){
+    while(*ptr != '\0' && isspace(*ptr)){
+        ptr++;
+    }
+    return *ptr != '\0';
 }
 
 void set_opcode_binary(codeWord *word, char opcode) {

@@ -8,9 +8,10 @@
 /*
  * Function that starts the pre assembler process.
  * @param file_name - the file name of the file to start the pre assembler on.
+ * @param macro_head - Double pointer to the head of the macro list.
  * @return True if the pre assembler succeeded, False otherwise.
  */
-int start_pre_assem(char *file_name);
+int start_pre_assem(char *file_name, Node **macro_head);
 
 /*
  * Function that reads the file, looking for macro declarations and store them in the linked list.

@@ -43,6 +43,21 @@ macroNode *create_macro_node(char *macro_name, char *macro_content) {
     return temp;
 }
 
+labelNode *create_label_node(char * label_name, int address, labelType type){
+    labelNode *temp = NULL;
+    temp = malloc(sizeof(labelNode));
+    if(temp == NULL)
+        return NULL;
+    temp->label_name = strdupli(label_name);
+    if(temp->label_name == NULL){
+        free(temp);
+        return NULL;
+    }
+    temp->address = address;
+    temp->label_type = type;
+    return temp;
+}
+
 Node *search_node(Node *head, char *name, nodeType node_type) {
     Node *temp = head;
     macroNode *macro_node = NULL;
@@ -59,7 +74,9 @@ Node *search_node(Node *head, char *name, nodeType node_type) {
             /* Casting the data to be a macro node */
             macro_node = (macroNode *) temp->data;
             /* Found a match */
+            /* printf("MACRO NAME: '%s' , CHECKING: '%s'\n",macro_node->macr_name,name); */
             if (strcmp(macro_node->macr_name, name) == 0) {
+                /* printf("MATCH\n"); */
                 return temp;
             }
 
@@ -163,7 +180,7 @@ void print_label_list(Node *head) {
         label_node = (labelNode *) temp->data;
         printf("\nLabel Name: '%s'\n", label_node->label_name);
         printf("Label address: '%d'\n", label_node->address);
-        printf("Label type: '%d", label_node->label_type);
+        printf("Label type: '%d'", label_node->label_type);
         temp = temp->next;
     }
     printf("\n\n---END OF LIST---\n\n");

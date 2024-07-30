@@ -8,9 +8,10 @@
 
 /*
  * Function that starts the first pass for a given file.
- * @param file_name - the file name of the file to first pass on.
+ * @param file_name - The file name of the file to first pass on.
+ * @param macro_head - Double pointer to the head of the macro list.
  * @return True if the first pass succeeded , False otherwise.
  */
-bool start_first_pass(char * file_name);
+bool start_first_pass(char * file_name, Node ** macro_head);
 
 #endif
