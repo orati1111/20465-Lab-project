@@ -17,11 +17,14 @@
 #define ERR_MSG_MACRO_ALREADY_EXISTS "Attempt to declare a macro with name that already exists in the macro list."
 #define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
 #define ERR_MSG_LONG_MACRO_NAME "The macro name given is too long (exceeds 31) "
-#define ERR_MSG_COULDNT_CREATE_MACRO_NODE "Couldn't create a node in the linked list for the macro."
+#define ERR_MSG_COULDNT_CREATE_NODE "Couldn't create a node in the linked list."
 #define ERR_MSG_LINE_TOO_LONG "The line exceeds the 80 characters limit."
 #define ERR_MSG_REALLOC_FAILED "Reallocating memory failed."
 #define ERR_MSG_LABEL_NAME_TOO_LONG "The label name exceeds the 31 characters limit."
 #define ERR_MSG_ILLEGAL_LABEL_NAME "Invalid label name."
+#define ERR_MSG_UNKNOWN "Unknown error."
+#define ERR_MSG_LABEL_AS_MACRO_NAME "Trying to declare a label with a already existing macro's name."
+#define ERR_MSG_EXTRA_TEXT_ENTRY_EXTERN "Extra text after entry or extern declaration."
 
 /* The Error to number mapping */
 enum {
@@ -32,14 +35,18 @@ enum {
     ERROR_INVALID_MACRO_DECL,
     ERROR_MACRO_ALREADY_EXISTS,
     ERROR_LONG_MACRO_NAME,
-    ERROR_COULDNT_CREATE_MACRO_NODE,
+    ERROR_COULDNT_CREATE_NODE,
 
     /* Line Errors */
     ERROR_LINE_TOO_LONG,
+    ERROR_EXTRA_TEXT_AFTER_ENTRY_EXTERN,
 
     /* Label Errors */
     ERROR_LABEL_NAME_TOO_LONG,
     ERROR_ILLEGAL_LABEL_NAME,
+    ERROR_LABEL_AS_MACRO_NAME,
+
+
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,
@@ -48,7 +55,14 @@ enum {
 
     /* Memory Errors */
     ERROR_MALLOC_FAILED,
-    ERROR_REALLOC_FAILED
+    ERROR_REALLOC_FAILED,
+    ERROR_UNKNOWN,
+
+
+
+
+    /* No error */
+    NO_ERROR
 
 
 };

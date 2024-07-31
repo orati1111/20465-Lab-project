@@ -8,10 +8,11 @@
 
 /*
  * Function that starts the first pass for a given file.
- * @param file_name - The file name of the file to first pass on.
- * @param macro_head - Double pointer to the head of the macro list.
+ * @param file_name - The file name of the file to first pass on.th
+ * @param macro_head - Double pointer to e head of the macro list.
+ * @param label_head - Double pointer to e head of the label list.
  * @return True if the first pass succeeded , False otherwise.
  */
-bool start_first_pass(char * file_name, Node ** macro_head);
+bool start_first_pass(char * file_name, Node ** macro_head , Node ** label_head);
 
 #endif

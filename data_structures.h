@@ -8,9 +8,9 @@
 
 /*
  * Struct that represents the node and its attributes:
- * macr_name - The name of the macro.
- * macr_content - The content inside the macro.
- * next - Pointer to the next node in the list.
+ * void * data - A pointer to the data of the node (Macro node or Label node).
+ * nodeType node_type - The type of the node (Macro or label)
+ * Node next - Pointer to the next node in the list.
  */
 typedef struct Node {
     void *data;
@@ -20,8 +20,8 @@ typedef struct Node {
 
 /*
  * Struct that represents the content of a macro node.
-  * macr_name - The name of the macro.
- *  macr_content - The content inside the macro.
+  * char * macr_name - The name of the macro.
+ *  char * macr_content - The content inside the macro.
  */
 typedef struct macro_node {
     char *macr_name;
@@ -30,13 +30,13 @@ typedef struct macro_node {
 
 /*
  * Struct that represents the label node.
- * label_name - The name of the label to store.
- * address - The memory address of the label (starts at 100)
- * label_type - The type of the label.
+ * char * label_name - The name of the label to store.
+ * short address - The memory address of the label (starts at 100)
+ * LabelType label_type - The type of the label.
  */
 typedef struct label_node {
     char *label_name;
-    int address;
+    short address;
     labelType label_type;
 } labelNode;
 
@@ -54,19 +54,45 @@ typedef struct codeWord {
 
 /*
  * Structure that represents the parts of an instruction in the code.
- *
+ * LabelNode *label - A pointer to the label node that stores the information about the node (if presented).
+ * instrType *type - The type of the instruction (string or data).
+ * Union
+ *      size_t string_length - The length of the string in the .string instruction.
+ *      short amount_of_numbers - The amount of numbers in the .data instruction.
+ * Union
+ *      char *string - The string itself.
+ *      int *numbers - An array of the numbers.
  */
 typedef struct instr {
-    char *label;
+    labelNode *label;
+    instrType type;
+    union {
+        size_t string_length;
+        short amount_of_numbers;
+    } length;
+    union {
+        char *string;
+        int *numbers;
+    } data;
 } instrParts;
 
 /*
  * Structure that represents the parts of a command in the code.
+ * LabelNode *label - A pointer to the label node that stores the information about the node (if presented).
+ * char *op_names - The operation name in the command.
+ * addressMode src_mode - The address mode of the source operand.
+ * char *src - The source operand.
+ *  addressMode dst_mode - The address mode of the destination operand.
+ * char *dst - The destination operand.
+ *
  */
-
 typedef struct command {
-    char * label;
-    char * op_names;
+    labelNode *label;
+    char *op_names;
+    addressMode src_mode;
+    char *src;
+    addressMode dst_mode;
+    char *dst;
 } commandParts;
 
 
@@ -94,7 +120,7 @@ macroNode *create_macro_node(char *macro_name, char *macro_content);
  * @param type - The type of label (extern, entry etc.)
  * @return Pointer to the created node.
  */
-labelNode *create_label_node(char *label_name, int address, labelType type);
+labelNode *create_label_node(char *label_name, short address, labelType type);
 
 /*
  * Function that searches a node by its name.
@@ -143,6 +169,12 @@ void init_code_word(codeWord *word);
  * @param word - The word to print.
  */
 void print_bits(codeWord word);
+
+/*
+ * Function that initializes a given instrParts pointer.
+ * @param ptr - Pointer to the instrParts struct.
+ */
+void init_instr_parts(instrParts * ptr);
 
 
 #endif

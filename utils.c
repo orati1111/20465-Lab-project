@@ -55,7 +55,7 @@ bool is_name_legal(char *name) {
             return false;
     }
     /* Name as the macro declaration */
-    if (strcmp(name, "macr") == 0)
+    if (strcmp(name, "macr") == 0 || strcmp(name, "endmacr") == 0)
         return false;
     return true;
 

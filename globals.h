@@ -14,6 +14,20 @@ typedef enum {
 } labelType;
 
 typedef enum {
+    DATA,
+    STRING,
+    NONE
+} instrType;
+
+typedef enum {
+    IMMEDIATE,
+    DIRECT,
+    INDIRECT_REG,
+    DIRECT_REG
+
+} addressMode;
+
+typedef enum {
     MACRO,
     LABEL
 } nodeType;

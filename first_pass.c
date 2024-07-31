@@ -10,7 +10,7 @@
 #include "lexer.h"
 
 
-bool start_first_pass(char *file_name, Node **macro_head) {
+bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
     char buffer[BUFFER_SIZE];
     char cpy[MAX_CHAR_IN_LINE];
     char *am_file = NULL;
@@ -18,12 +18,13 @@ bool start_first_pass(char *file_name, Node **macro_head) {
 
     FILE *fp_am = NULL;
 
-    Node *label_head = NULL;
     labelNode *label_node = NULL;
 
-    int IC = 0, DC = 0, line_number = 0;
-    bool no_error = true;
+    instrParts *instruction = NULL;
+    commandParts *command = NULL;
 
+    int IC = 0, DC = 0, line_number = 0, num_of_entries = 0, num_of_externs = 0;
+    bool no_error = true;
 
 
     am_file = add_file_extension(file_name, AM_EXTENSION);
@@ -38,6 +39,7 @@ bool start_first_pass(char *file_name, Node **macro_head) {
     fseek(fp_am, 0, SEEK_SET);
 
     /* Read the file content */
+    /* TODO: add a memory overflow IC DC break condition */
     while (fgets(buffer, BUFFER_SIZE, fp_am) != NULL) {
         buffer[strlen(buffer) - 1] = '\0';
         /* Checking if the line is too long */
@@ -49,20 +51,33 @@ bool start_first_pass(char *file_name, Node **macro_head) {
         strcpy(cpy, buffer);
         remove_leading_spaces(cpy);
         /* The line is a comment, therefore will be ignored */
-        if(line_is_comment(cpy) == true){
+        if (line_is_comment(cpy) == true) {
             continue;
         }
         /* The line is a new line , therefore will be ignored */
-        if(strcmp(cpy,"\n") == 0 || cpy[0] == '\0'){
+        if (strcmp(cpy, "\n") == 0 || cpy[0] == '\0') {
             continue;
         }
         /* Locate ':' in the string */
 
-        /* Locate '.' in the string */
 
+        /* Locate '.' in the string */
+        if(strchr(cpy,'.') != NULL){
+            /* Locate '.entry' or '.extern' */
+            if (strstr(cpy,".entry") != NULL || strstr(cpy, ".extern") != NULL){
+                construct_extern_entry(cpy, macro_head, label_head, line_number,&num_of_entries, &num_of_externs);
+
+            }
+            if(strstr(cpy,".data")){
+                instruction = construct_instruction(cpy,macro_head,label_head,line_number);
+            }
+            print_label_list(*label_head);
+
+        }
     }
     fclose(fp_am);
-    free_list(macro_head,MACRO,ALL);
+    free_list(macro_head, MACRO, ALL);
+    free_list(label_head,LABEL,ALL);
 
 
     return true;

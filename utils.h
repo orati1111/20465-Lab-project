@@ -45,14 +45,22 @@ bool is_name_legal(char *name);
 char *strdupli(char *original);
 
 /*
- * Function that removes leading or trailing spaces from a given string.
+ * Function that removes all spaces from a string.
  * @param str - The string to remove spaces from.
  * @return The string without spaces
  */
 char *remove_spaces(const char *str);
 
+/*
+ * Function that removes leading spaces from a given string in place.
+ * @param str - The string.
+ */
 void remove_leading_spaces(char * str);
 
+/*
+ * Function that removes trailing spaces from a given string in place.
+ * @param str - The string.
+ */
 void remove_trailing_spaces(char * str);
 
 /*

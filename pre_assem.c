@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "pre_assem.h"
 #include "errors.h"
+#include "lexer.h"
 
 int start_pre_assem(char *file_name, Node **macro_head) {
     char *as_file = NULL;
@@ -137,7 +138,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
                 add_node(head, node);
             } else {
                 free_list(head, MACRO, ALL);
-                generate_error(ERROR_COULDNT_CREATE_MACRO_NODE, -1,"");
+                generate_error(ERROR_COULDNT_CREATE_NODE, -1,"");
                 exit(0);
             }
         }
@@ -176,6 +177,9 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         remove_leading_spaces(cpy);
         current_line_size = strlen(cpy);
         (*line_number)++;
+        /* Checking if there is a comment inside the macro, skipping it. */
+        if(line_is_comment(cpy))
+            continue;
         /* Checking if adding the new line exceeds the current size of the content */
         if (content_actual_size + current_line_size + 1 > size) {
             size *= 2;
