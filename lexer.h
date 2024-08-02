@@ -29,7 +29,7 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
                             int *num_of_externs);
 
 /*
- * Function that constructs instruction from a given line.
+ * Function that constructs an instruction from a given line.
  * @param line - The line to check.
  * @param macro_head - Double pointer to the head of the macro list.
  * @param label_head - Double pointer to the head of the label list.
@@ -39,17 +39,53 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
 instrParts *construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number);
 
 /*
+ * Function that constructs a command from a given line.
+ * @param line - The line to check.
+ * @param
+ */
+commandParts * construct_command(char *line , );
+
+/*
  * Function that checks if there is a label declaration in the line.
  * @param line - the line to check.
  * @return The name of the label, NULL otherwise.
  */
-char * line_is_label_decl(char * line);
+char *line_is_label_decl(char *line);
+
 /*
  * Function that validates the legality of the label name.
  * @param label_name - The label_name to check.
  * @param macro_head - Double pointer to the head of the macro list.
+ * @param label_head - Double pointer to the head of the label list.
+ * @param labelType - The type of the label.
  * @return NO_ERROR if the name is valid, error_number otherwise.
  */
-int validate_label_name(char *label_name, Node **macro_head);
+int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type);
+
+/*
+ * Function that gets a .string argument and extracts the string.
+ * @param line - The line to extract the argument from.
+ * @return The argument, NULL otherwise.
+ */
+char *get_string(const char *line);
+
+
+/*
+ * Function that gets the .data string, validates it and returns the number array
+ * @param line - The line to extract the argument from.
+ * @param line_number - The line of the number in the file.
+ * @param num_of_numbers - Pointer to the number of numbers inside the array.
+ * @return An array of the numbers, NULL otherwise.
+ */
+int *get_data(char *line, int line_number, short * num_of_numbers);
+
+/*
+ * Function that gets the .data numbers, stores then inside an array and returns it.
+ * @param cpy - The copy of the line to alter.
+ * @param line_number - The line of the number in the file.
+ * @param line - The line itself.
+ * @param num_of_numbers - A pointer to store the amount of numbers.
+ */
+int * get_numbers(char * cpy, int line_number, char * line, short * num_of_numbers);
 
 #endif

@@ -23,28 +23,25 @@ int start_pre_assem(char *file_name, Node **macro_head) {
     /* In case the file doesn't exist/couldn't open it. */
     if (fp_as == NULL) {
         generate_error(ERROR_COULDNT_OPEN_FILE, -1,"");
-        free(as_file);
+        cleanup("s",as_file);
         return false;
     }
 
     /* Add macros to the list */
     if (add_macros_to_list(fp_as, macro_head) == false) {
         free_list(macro_head, MACRO, ALL);
-        free(as_file);
-        fclose(fp_as);
+        cleanup("sf",as_file,fp_as);
         return false;
     }
 
     /* Remove all the macro declaration and replace the macro calls with its content */
     if (macro_expansion(fp_as, file_name, *macro_head) == false) {
         free_list(macro_head, MACRO, ALL);
-        free(as_file);
-        fclose(fp_as);
+        cleanup("sf",as_file,fp_as);
         return false;
     }
-    fclose(fp_as);
     free_list(macro_head, MACRO, CONTENT_ONLY);
-    free(as_file);
+    cleanup("sf",as_file,fp_as);
     return true;
 }
 
@@ -62,7 +59,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
     /* Reading the lines from the file*/
     while (fgets(buffer, BUFFER_SIZE, fp)) {
         line_number++;
-        buffer[strlen(buffer)-1] = '\0';
+        buffer[strlen(buffer)] = '\0';
         /* Checking if the line is too long */
         if(strlen(buffer) > MAX_CHAR_IN_LINE-1){
             generate_error(ERROR_LINE_TOO_LONG,line_number,"");
@@ -87,13 +84,13 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Checking if the given macro name is a reserved word or an invalid name. */
             if (is_name_legal(macro_name) == false || isalpha(macro_name[0]) == false) {
                 generate_error(ERROR_ILLEGAL_MACRO_NAME, line_number,buffer);
-                free(macro_name);
+                cleanup("s",macro_name);
                 no_error = false;
                 continue;
             }
             if (strlen(macro_name) > MAX_MACRO_LENGTH) {
                 generate_error(ERROR_LONG_MACRO_NAME, line_number,buffer);
-                free(macro_name);
+                cleanup("s",macro_name);
                 no_error = false;
                 continue;
             }
@@ -102,7 +99,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Checking if the macro name already exists */
             if (temp != NULL) {
                 generate_error(ERROR_MACRO_ALREADY_EXISTS, line_number,buffer);
-                free(macro_name);
+                cleanup("s",macro_name);
                 no_error = false;
                 continue;
             }
@@ -111,7 +108,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Checking if there is extra text after the macro declaration. */
             if (remaining != NULL) {
                 generate_error(ERROR_EXTRA_TEXT_AFTER_MACRO_NAME, line_number,buffer);
-                free(macro_name);
+                cleanup("s",macro_name);
                 no_error = false;
                 continue;
             }
@@ -121,17 +118,14 @@ int add_macros_to_list(FILE *fp, Node **head) {
             macro_content = save_macro_content(fp, &pos, &line_number);
             if (macro_content == NULL)
                 exit(0);
-
             macro_node = create_macro_node(macro_name, macro_content);
             if (macro_node == NULL) {
                 generate_error(ERROR_MALLOC_FAILED, -1,"");
-                free(macro_name);
-                free(macro_content);
+                cleanup("ss",macro_name, macro_content);
                 exit(0);
             }
             /* Since we are duplicating the strings, they should be freed. */
-            free(macro_name);
-            free(macro_content);
+            cleanup("ss",macro_name, macro_content);
             node = create_node(macro_node, sizeof(macroNode), MACRO);
             free(macro_node);
             if (node != NULL) {
@@ -170,6 +164,7 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         return NULL;
     }
     while (fgets(buffer, BUFFER_SIZE, fp) != NULL) {
+        fgetpos(fp, pos);
         /* Checking if endmacr is a substring */
         if (strstr(buffer, "endmacr") != NULL)
             break;
@@ -187,7 +182,7 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
             /* Reallocation failed */
             if (temp == NULL) {
                 generate_error(ERROR_REALLOC_FAILED, -1,"");
-                free(content);
+                cleanup("s",content);
                 return NULL;
             }
             content = temp;

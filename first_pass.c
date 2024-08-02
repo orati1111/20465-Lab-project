@@ -16,6 +16,8 @@ bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
     char *am_file = NULL;
     char *token = NULL;
 
+    int i;
+
     FILE *fp_am = NULL;
 
     labelNode *label_node = NULL;
@@ -31,17 +33,18 @@ bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
     fp_am = fopen(am_file, "r");
     /* In case the am file couldn't be open */
     if (fp_am == NULL) {
-        free(am_file);
+        cleanup("s",am_file);
         generate_error(ERROR_COULDNT_OPEN_FILE, -1, "");
         return false;
     }
-    free(am_file);
+    cleanup("s",am_file);
     fseek(fp_am, 0, SEEK_SET);
 
     /* Read the file content */
     /* TODO: add a memory overflow IC DC break condition */
     while (fgets(buffer, BUFFER_SIZE, fp_am) != NULL) {
-        buffer[strlen(buffer) - 1] = '\0';
+        line_number++;
+        buffer[strlen(buffer)] = '\0';
         /* Checking if the line is too long */
         if (strlen(buffer) > MAX_CHAR_IN_LINE - 1) {
             generate_error(ERROR_LINE_TOO_LONG, line_number, "");
@@ -58,8 +61,6 @@ bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
         if (strcmp(cpy, "\n") == 0 || cpy[0] == '\0') {
             continue;
         }
-        /* Locate ':' in the string */
-
 
         /* Locate '.' in the string */
         if(strchr(cpy,'.') != NULL){
@@ -68,10 +69,24 @@ bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
                 construct_extern_entry(cpy, macro_head, label_head, line_number,&num_of_entries, &num_of_externs);
 
             }
-            if(strstr(cpy,".data")){
+            if(strstr(cpy,".data") || strstr(cpy, ".string")){
                 instruction = construct_instruction(cpy,macro_head,label_head,line_number);
+                if(instruction == NULL){
+                    no_error = false;
+                }
+                else{
+                    /* TODO: delete this */
+                    if(instruction->type == DATA) {
+                        for (i = 0; i < instruction->length.amount_of_numbers; i++) {
+                        }
+                        cleanup("ni",instruction->data.numbers,instruction);
+                    }
+                    else if(instruction->type == STRING){
+                        cleanup("si",instruction->data.string,instruction);
+                    }
+                }
+
             }
-            print_label_list(*label_head);
 
         }
     }
@@ -80,5 +95,5 @@ bool start_first_pass(char *file_name, Node **macro_head, Node ** label_head) {
     free_list(label_head,LABEL,ALL);
 
 
-    return true;
+    return no_error;
 }

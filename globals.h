@@ -10,7 +10,7 @@ typedef enum {
 typedef enum {
     EXTERN,
     ENTRY,
-    OTHER
+    LOCAL
 } labelType;
 
 typedef enum {

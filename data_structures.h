@@ -54,7 +54,7 @@ typedef struct codeWord {
 
 /*
  * Structure that represents the parts of an instruction in the code.
- * LabelNode *label - A pointer to the label node that stores the information about the node (if presented).
+ * Node *label - A pointer to the label node that stores the information about the node (if presented).
  * instrType *type - The type of the instruction (string or data).
  * Union
  *      size_t string_length - The length of the string in the .string instruction.
@@ -64,7 +64,7 @@ typedef struct codeWord {
  *      int *numbers - An array of the numbers.
  */
 typedef struct instr {
-    labelNode *label;
+    Node *label;
     instrType type;
     union {
         size_t string_length;
@@ -87,7 +87,7 @@ typedef struct instr {
  *
  */
 typedef struct command {
-    labelNode *label;
+    Node *label;
     char *op_names;
     addressMode src_mode;
     char *src;

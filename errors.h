@@ -25,6 +25,15 @@
 #define ERR_MSG_UNKNOWN "Unknown error."
 #define ERR_MSG_LABEL_AS_MACRO_NAME "Trying to declare a label with a already existing macro's name."
 #define ERR_MSG_EXTRA_TEXT_ENTRY_EXTERN "Extra text after entry or extern declaration."
+#define ERR_MSG_EXTERN_AS_LOCAL "Attempt to declare an extern label as local label"
+#define ERR_MSG_LABEL_ALREADY_EXISTS "Attempt to declare a label with name that already exists in the label list"
+#define ERR_MSG_LOCAL_AS_EXTERN "Attempt to declare local label as extern label"
+#define ERR_MSG_INVALID_STRING_FORMAT "In .string instruction, the string should be enclosed with \"string\". "
+#define ERR_MSG_DATA_EMPTY "There are no numbers after .data instruction - should be one or more."
+#define ERR_MSG_COMMA_AT_START "Invalid .data instruction - comma before first number."
+#define ERR_MSG_COMMA_AT_END "Invalid .data instruction - comma after last number."
+#define ERR_MSG_MULTIPLE_COMMAS "Invalid .data instruction - multiple commas in a row."
+#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers (-x for negative numbers, +x or x for positive)"
 
 /* The Error to number mapping */
 enum {
@@ -45,8 +54,19 @@ enum {
     ERROR_LABEL_NAME_TOO_LONG,
     ERROR_ILLEGAL_LABEL_NAME,
     ERROR_LABEL_AS_MACRO_NAME,
+    ERROR_EXTERN_AS_LOCAL,
+    ERROR_LOCAL_AS_EXTERN,
+    ERROR_LABEL_ALREADY_EXISTS,
 
+    /* .String Errors */
+    ERROR_INVALID_STRING_FORMAT,
 
+    /* .Data Errors */
+    ERROR_DATA_EMPTY,
+    ERROR_DATA_COMMA_AT_START,
+    ERROR_DATA_COMMA_AT_END,
+    ERROR_DATA_MULTIPLE_COMMAS,
+    ERROR_DATA_INVALID_INPUT,
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,

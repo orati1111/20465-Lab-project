@@ -95,4 +95,33 @@ void set_opcode_binary(codeWord *word, char opcode);
  */
 int is_op_name(char *op_name);
 
+
+/*
+ * Function that frees all the given arguments using stdargs
+ * @param order - The order of the given arguments , i.e "fssf" means file,string,string,file.
+ */
+void cleanup(const char* order, ...);
+
+/*
+ * Function that checks if a given input has multiple consecutive commas,
+ * @param input - The string to check.
+ * @return True if there is multiple commas, false otherwise.
+ */
+bool check_multiple_commas(char * input);
+
+/*
+ * Function that in a given string, if there is only one parenthesis.
+ * @param input - The string to check.
+ * @return True if there is, false otherwise.
+ */
+bool check_invalid_parentheses(char * input);
+
+/*
+ * Function that gets a number as a string (including + or - in front of the number) and checks if it is a whole number.
+ * Since .data accepts only whole numbers (both negative and positive).
+ * @param number - The string that represents the number.
+ * @return True if it is, false otherwise
+ */
+bool is_whole_number(char * number);
+
 #endif

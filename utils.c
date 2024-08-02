@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdarg.h>
 #include "utils.h"
 #include "errors.h"
 
@@ -139,8 +140,7 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     while (fgets(buffer, BUFFER_SIZE, fp_as)) {
         strcpy(cpy, buffer);
         token = strtok(cpy," \n");
-        /* printf("'%s'\n",token); */
-        if(strcmp(token,"") == 0)
+        if(token == NULL || strcmp(token,"") == 0)
             continue;
         /* Looking for the start of macro declaration */
         if (strncmp(token, "macr", 4) == 0 && strlen(token) == strlen("macr")) {
@@ -196,4 +196,104 @@ int is_op_name(char *op_name) {
         }
     }
     return op_code;
+}
+
+void cleanup(const char * order, ...){
+    va_list args;
+    char *str = NULL;
+    int * numbers;
+    FILE *fp = NULL;
+    labelNode *label_node = NULL;
+    instrParts *instruction = NULL;
+    const char * ptr = NULL;
+
+    va_start(args, order);
+    for(ptr = order; *ptr != '\0'; ptr++){
+        /* String */
+        if(*ptr == 's'){
+            str = va_arg(args, char*);
+            if(str != NULL)
+                free(str);
+        }
+        /* File pointer */
+        if(*ptr == 'f'){
+            fp = va_arg(args, FILE *);
+            if (fp != NULL)
+                fclose(fp);
+        }
+        if(*ptr == 'l'){
+            label_node = va_arg(args, labelNode *);
+            if(label_node != NULL)
+                free(label_node);
+        }
+        if(*ptr == 'i'){
+            instruction = va_arg(args, instrParts *);
+            if(instruction != NULL)
+                free(instruction);
+        }
+        if(*ptr == 'n'){
+            numbers = va_arg(args, int *);
+            if(numbers != NULL)
+                free(numbers);
+        }
+    }
+
+    va_end(args);
+}
+
+bool check_multiple_commas(char * input){
+    char * ptr = NULL;
+    char * cpy = NULL;
+
+    if(input == NULL)
+        return false;
+
+    cpy = strdupli(input);
+    if(cpy == NULL){
+        generate_error(ERROR_MALLOC_FAILED,-1, "");
+        return false;
+    }
+    else{
+        ptr = cpy;
+        while(*ptr != '\0'){
+            if(*ptr == ','){
+                ptr++;
+                if(*ptr == ','){
+                    cleanup("s",cpy);
+                    return true;
+                }
+            }
+            else
+                ptr++;
+        }
+    }
+    cleanup("s",cpy);
+    return false;
+
+}
+
+bool check_invalid_parentheses(char * input){
+    int count = 0;
+
+    /* Iterating and counting the amount if " in the string */
+    while(*input != '\0'){
+        if(*input == '"')
+            count++;
+        input++;
+    }
+    return count == 1;
+}
+
+
+bool is_whole_number(char * number){
+
+    if (*number == '+' || *number == '-')
+        number++;
+
+    while(*number != '\0'){
+        if(isdigit(*number) == 0)
+            return false;
+        number++;
+    }
+    return true;
 }
