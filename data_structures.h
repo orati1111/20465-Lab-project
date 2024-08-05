@@ -36,7 +36,7 @@ typedef struct macro_node {
  */
 typedef struct label_node {
     char *label_name;
-    short address;
+    unsigned short address;
     labelType label_type;
 } labelNode;
 
@@ -88,7 +88,7 @@ typedef struct instr {
  */
 typedef struct command {
     Node *label;
-    char *op_names;
+    short op_code;
     addressMode src_mode;
     char *src;
     addressMode dst_mode;
@@ -120,7 +120,7 @@ macroNode *create_macro_node(char *macro_name, char *macro_content);
  * @param type - The type of label (extern, entry etc.)
  * @return Pointer to the created node.
  */
-labelNode *create_label_node(char *label_name, short address, labelType type);
+labelNode *create_label_node(char *label_name, unsigned short address, labelType type);
 
 /*
  * Function that searches a node by its name.
@@ -171,10 +171,11 @@ void init_code_word(codeWord *word);
 void print_bits(codeWord word);
 
 /*
- * Function that initializes a given instrParts pointer.
- * @param ptr - Pointer to the instrParts struct.
+ * Function that initializes a given instrParts / commandParts struct pointer.
+ * @param iptr - Pointer to the instrParts struct.
+ * @param cptr - Pointer to the commandParts struct.
  */
-void init_instr_parts(instrParts * ptr);
+void init_struct_parts(instrParts * iptr, commandParts * cptr);
 
 
 #endif

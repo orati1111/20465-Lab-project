@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "lexer.h"
 #include "utils.h"
 #include "errors.h"
@@ -13,7 +14,7 @@ bool line_is_comment(char *line) {
     return line[0] == ';';
 }
 
-/* TODO: add IC or DC idk */
+/* TODO: add ic dc*/
 bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number, int *num_of_entries,
                             int *num_of_externs) {
     char *cpy = NULL;
@@ -21,15 +22,14 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
     char *keyword = NULL;
     char *label_name = NULL;
     char *extra = NULL;
-    labelNode *label_node = NULL;
-    labelNode *found = NULL;
     Node *temp = NULL;
-    Node *node = NULL;
-    short address = 0;
-    int error = NO_ERROR;
     labelType type;
 
     cpy = strdupli(line);
+    if (cpy == NULL) {
+        generate_error(ERROR_MALLOC_FAILED, -1, "");
+        return false;
+    }
     if ((ptr = strstr(cpy, ".entry")) != NULL) {
         keyword = ".entry";
         type = ENTRY;
@@ -55,51 +55,36 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
         return false;
     }
 
-    /* Checking if the name is invalid */
-    if ((error = validate_label_decl(label_name, macro_head, label_head, type)) != NO_ERROR) {
-        generate_error(error, line_number, line);
+    /* Handling the label declaration */
+    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0);
+    if (temp == NULL) {
         cleanup("s", cpy);
         return false;
     }
 
-    /* Creating a label node to store the label's information */
-    label_node = create_label_node(label_name, address, type);
-    if (label_node == NULL) {
-        generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
-        cleanup("s", cpy);
-        return false;
-    }
-    if ((node = create_node(label_node, sizeof(labelNode), LABEL)) == NULL) {
-        generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
-        cleanup("sl", cpy, label_node);
-        free_list(label_head, LABEL, ALL);
-        return false;
-    }
-
-    cleanup("sl", cpy, label_node);
-    add_node(label_head, node);
     if (type == EXTERN)
         (*num_of_externs)++;
     else {
         (*num_of_entries)++;
     }
 
-
+    cleanup("s", cpy);
     return true;
 
 
 }
 
-instrParts *construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number) {
+instrParts *
+construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short DC) {
     char *cpy = NULL;
+    char *ptr = NULL;
+    char *raw_string = NULL;
     char *string = NULL;
     char *label_name = NULL;
     int *numbers = NULL;
     instrParts *instruction = NULL;
-    labelNode *label_node = NULL;
     Node *temp = NULL;
 
-    int error = NO_ERROR;
     short num_of_numbers = 0;
 
     instruction = malloc(sizeof(instrParts));
@@ -107,30 +92,16 @@ instrParts *construct_instruction(char *line, Node **macro_head, Node **label_he
         generate_error(ERROR_MALLOC_FAILED, -1, "");
         exit(0);
     }
-    init_instr_parts(instruction);
+    init_struct_parts(instruction, NULL);
 
     label_name = line_is_label_decl(line);
     if (label_name != NULL) {
-        if ((error = validate_label_decl(label_name, macro_head, label_head, LOCAL)) != NO_ERROR) {
-            generate_error(error, line_number, line);
-            cleanup("i", instruction);
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC);
+        if (temp == NULL) {
+            cleanup("si", label_name, instruction);
             return NULL;
-        }
-        /* TODO: change here when i understand the IC DC thing */
-        label_node = create_label_node(label_name, 0, LOCAL);
-        if (label_node == NULL) {
-            generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
-            cleanup("is", instruction, label_name);
-            return NULL;
-        }
-        temp = create_node(label_node, sizeof(labelNode), LABEL);
-        cleanup("ls", label_node, label_name);
-        if (temp != NULL) {
-            add_node(label_head, temp);
-            instruction->label = temp;
         } else {
-            cleanup("i", instruction);
-            return NULL;
+            instruction->label = temp;
         }
 
     }
@@ -140,49 +111,127 @@ instrParts *construct_instruction(char *line, Node **macro_head, Node **label_he
         instruction->type = DATA;
         cpy = strdupli(line);
         numbers = get_data(cpy, line_number, &num_of_numbers);
-        if(numbers == NULL){
-            cleanup("is",instruction, cpy);
+        if (numbers == NULL) {
+            cleanup("iss", instruction, cpy, label_name);
             return NULL;
         }
         instruction->data.numbers = numbers;
         instruction->length.amount_of_numbers = num_of_numbers;
+        cleanup("ss", label_name, cpy);
 
 
         /* Handling string instruction */
-    } else if (strstr(line, ".string") != NULL) {
+    } else if ((cpy = strstr(line, ".string")) != NULL) {
         instruction->type = STRING;
-        cpy = strdupli(line);
-        if (strchr(cpy, '"') == NULL || check_invalid_parentheses(cpy)) {
+        raw_string = strdupli(cpy);
+        ptr = raw_string;
+        raw_string += strlen(".string");
+        if (strchr(raw_string, '"') == NULL || check_invalid_parentheses(raw_string) ||
+            ((string = get_string(raw_string)) == NULL)) {
             generate_error(ERROR_INVALID_STRING_FORMAT, line_number, line);
             free_list(label_head, LABEL, ALL);
-            cleanup("is", instruction, cpy);
-            return NULL;
-        }
-        if ((string = get_string(cpy)) == NULL) {
-            free_list(label_head, LABEL, ALL);
-            cleanup("is", instruction, cpy);
+            cleanup("iss", instruction, label_name, ptr);
             return NULL;
         }
         instruction->data.string = string;
         instruction->length.string_length = strlen(string) + 1;
-
+        cleanup("ss", label_name, ptr);
     }
 
-    cleanup("s", cpy);
+
     return instruction;
 
 
 }
 
-commandParts * construct_command(){
 
+commandParts *construct_command(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short IC) {
+    char *cpy = NULL;
+    char *op_name = NULL;
+    char *ptr = NULL;
+    char *remaining = NULL;
+    char *label_name = NULL;
+    commandParts *command = NULL;
+    Node *temp = NULL;
+    short op_code = -1;
+    int error = NO_ERROR;
+
+    cpy = strdupli(line);
+    if (cpy == NULL) {
+        generate_error(ERROR_MALLOC_FAILED, -1, "");
+        return NULL;
+    }
+
+    command = malloc(sizeof(commandParts));
+    if (command == NULL) {
+        generate_error(ERROR_MALLOC_FAILED, -1, "");
+        return NULL;
+    }
+    label_name = line_is_label_decl(cpy);
+    if (label_name != NULL) {
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC);
+        if (temp == NULL) {
+            cleanup("ssc", cpy, label_name, command);
+            return NULL;
+        }
+    }
+    init_struct_parts(NULL, command);
+    command->label = temp;
+    /* There is a label declaration in the line */
+    if (temp != NULL) {
+        ptr = strchr(cpy, ':');
+        ptr++;
+        ptr = strdupli(ptr);
+        remove_leading_spaces(ptr);
+        if (ptr == NULL || *ptr == '\0') {
+            generate_error(ERROR_LABEL_EMPTY_DECL, line_number, line);
+            cleanup("sssc", label_name, cpy, ptr, command);
+            return NULL;
+        }
+        op_name = strdupli(strtok(ptr, " "));
+        remaining = strdupli(strtok(NULL, "\n"));
+        cleanup("s", ptr);
+    } else {
+        op_name = strdupli(strtok(cpy, " "));
+        remaining = strdupli(strtok(NULL, "\n"));
+    }
+    if (op_name != NULL) {
+        remove_leading_spaces(op_name);
+        remove_trailing_spaces(op_name);
+        /* Checking if the name is a known op name */
+        if ((op_code = is_name_op_name(op_name)) == -1) {
+            generate_error(ERROR_UNKNOWN_OP_NAME, line_number, line);
+            cleanup("sscs", label_name, op_name, command, remaining);
+            return NULL;
+        }
+    }
+    command->op_code = op_code;
+    /* Get the arguments */
+    if ((error = get_arguments(remaining, command)) != NO_ERROR) {
+        generate_error(error, line_number, line);
+    }
+
+
+    /* TODO: Map the number of required arguments to the given operand */
+    /* TODO: Map type of address codes to arguments to a given operand */
+
+
+    /* TODO: Store all the information inside the command and return it*/
+
+
+
+    cleanup("ssss", remaining, op_name, cpy, label_name);
+
+
+    return command;
 }
+
 
 char *line_is_label_decl(char *line) {
     char cpy[MAX_CHAR_IN_LINE];
     char *token = NULL;
     strcpy(cpy, line);
-    if(strchr(cpy,':') == NULL)
+    if (strchr(cpy, ':') == NULL)
         return NULL;
     token = strtok(cpy, ":");
     remove_leading_spaces(token);
@@ -191,7 +240,6 @@ char *line_is_label_decl(char *line) {
     return token;
 }
 
-/* TODO: check if there is a ':' in the middle of the line - not a label */
 int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type) {
     Node *temp = NULL;
     labelNode *found = NULL;
@@ -210,22 +258,70 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
         if (found->label_type == LOCAL && type == LOCAL)
             return ERROR_LABEL_ALREADY_EXISTS;
         /* An attempt to declare a label as extern but its declared locally */
-        if (found->label_type == LOCAL && type == EXTERN) {
+        if (found->label_type == LOCAL && type == EXTERN)
             return ERROR_LOCAL_AS_EXTERN;
-        }
-        if (found->label_type == EXTERN && type == LOCAL) {
+        /* An attempt to declare an extern label as local */
+        if (found->label_type == EXTERN && type == LOCAL)
             return ERROR_EXTERN_AS_LOCAL;
-        }
+
+        if ((found->label_type == EXTERN && type == ENTRY) || (found->label_type == ENTRY && type == EXTERN))
+            return ERROR_EXTERN_ENTRY;
     }
     return NO_ERROR;
 
 }
 
+Node *
+handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
+                  unsigned short memory_counter) {
+    int error = NO_ERROR;
+    labelNode *label_node = NULL;
+    Node *temp = NULL;
+
+    if ((error = validate_label_decl(label_name, macro_head, label_head, type)) != NO_ERROR) {
+        generate_error(error, line_number, line);
+        return NULL;
+    }
+    label_node = create_label_node(label_name, memory_counter, type);
+    if (label_node == NULL) {
+        generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
+        return NULL;
+    }
+    temp = create_node(label_node, sizeof(labelNode), LABEL);
+    cleanup("l", label_node);
+    if (temp != NULL) {
+        add_node(label_head, temp);
+        return temp;
+    } else
+        return NULL;
+
+}
+
 char *get_string(const char *line) {
+    const char *ptr = NULL;
     char *start_ptr = NULL;
     char *end_ptr = NULL;
     char *result = NULL;
     size_t size;
+
+
+    /* Validating if the string isn't enclosed with "*/
+    ptr = line;
+    /* From the start */
+    while (isspace(*ptr) && *ptr != '\0')
+        ptr++;
+
+    if (*ptr != '"')
+        return NULL;
+
+    ptr = line + strlen(line) - 1;
+
+    /* From the end */
+    while (isspace(*ptr) && ptr >= line)
+        ptr--;
+
+    if (*ptr != '"')
+        return NULL;
 
     /* Locate the first and last occurrence of " and set them into pointers */
     /* Assuming that there is " in the string */
@@ -296,6 +392,7 @@ int *get_data(char *line, int line_number, short *num_of_numbers) {
 int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) {
     char *token = NULL;
     int capacity = 5;
+    int number;
     short count = 0;
     int *numbers = NULL;
     int *temp = NULL;
@@ -306,7 +403,6 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
         return NULL;
     }
 
-    /* TODO: check if the number is above X - check the חוברת*/
     /* Tokenizing by ',' */
     token = strtok(cpy, ",");
     while (token != NULL) {
@@ -323,10 +419,18 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
                     numbers = temp;
                 }
             }
-            numbers[count] = atoi(token);
-            count++;
+            number = atoi(token);
+            if (number > DATA_NUMBER_UPPER_LIMIT || number < DATA_NUMBER_LOWER_LIMIT) {
+                cleanup("n", numbers);
+                generate_error(ERROR_DATA_INVALID_INPUT, line_number, line);
+                return NULL;
+            } else {
+                numbers[count] = number;
+                count++;
+            }
+
         } else {
-            cleanup("n",numbers);
+            cleanup("n", numbers);
             generate_error(ERROR_DATA_INVALID_INPUT, line_number, line);
             return NULL;
         }
@@ -336,7 +440,18 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
     *num_of_numbers = count;
     return numbers;
 
+}
 
+int get_arguments(char * arguments, commandParts * command){
+    int op_code = command->op_code;
+    char * token = NULL;
+    /* TODO: Get arguments */
+    /* TODO: Check if enough arguments */
+    /* TODO: Look for address codes */
+    /* TODO: check arguments - register? label? number? */
+    /* TODO: label? if it doesnt exist , continue to look for it in the second pass */
+    /* TODO: label name is macro name? ERROR */
+    /* Cases */
 }
 
 

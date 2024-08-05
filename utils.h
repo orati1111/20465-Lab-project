@@ -20,6 +20,9 @@
 #define MAX_MSG_LENGTH 256
 #define MAX_MACRO_LENGTH 31
 #define INITIAL_CONTENT_SIZE 64
+#define DATA_NUMBER_UPPER_LIMIT 32767
+#define DATA_NUMBER_LOWER_LIMIT -16384
+#define MAX_MEMORY_SIZE 4096
 
 
 /*
@@ -36,6 +39,21 @@ char *add_file_extension(char *base_file_name, char *extension);
  * @return True if the name is legal, False otherwise.
  */
 bool is_name_legal(char *name);
+
+/*
+ * Function that checks if a given name is an operand name
+ * @param name - The name.
+ * @return The index of the op_code, -1 otherwise.
+ */
+short is_name_op_name(char *name);
+
+
+/*
+ * Function that checks if a given name is a register
+ * @param name - The name.
+ * @return True if it is, false otherwise.
+ */
+bool is_name_register(char *name);
 
 /*
  * Function that replicates the strdup functionality(Which isn't C90).
@@ -55,13 +73,13 @@ char *remove_spaces(const char *str);
  * Function that removes leading spaces from a given string in place.
  * @param str - The string.
  */
-void remove_leading_spaces(char * str);
+void remove_leading_spaces(char *str);
 
 /*
  * Function that removes trailing spaces from a given string in place.
  * @param str - The string.
  */
-void remove_trailing_spaces(char * str);
+void remove_trailing_spaces(char *str);
 
 /*
  * Function that expands the macros, removes macro declarations and creates the am file.
@@ -78,7 +96,7 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head);
  * @param string - The string to check.
  * @return True if there is, False otherwise.
  */
-bool check_extra_text(char *ptr, char * string);
+bool check_extra_text(char *ptr, char *string);
 
 /*
  * Function that converts the operation code into binary and stores it inside the appropriate place
@@ -89,32 +107,24 @@ bool check_extra_text(char *ptr, char * string);
 void set_opcode_binary(codeWord *word, char opcode);
 
 /*
- * Function that checks if a given operation name is legal.
- * @param op_name - The operation name to check.
- * @return The op code that represents the operation name, -1 otherwise.
- */
-int is_op_name(char *op_name);
-
-
-/*
  * Function that frees all the given arguments using stdargs
  * @param order - The order of the given arguments , i.e "fssf" means file,string,string,file.
  */
-void cleanup(const char* order, ...);
+void cleanup(const char *order, ...);
 
 /*
  * Function that checks if a given input has multiple consecutive commas,
  * @param input - The string to check.
  * @return True if there is multiple commas, false otherwise.
  */
-bool check_multiple_commas(char * input);
+bool check_multiple_commas(char *input);
 
 /*
  * Function that in a given string, if there is only one parenthesis.
  * @param input - The string to check.
  * @return True if there is, false otherwise.
  */
-bool check_invalid_parentheses(char * input);
+bool check_invalid_parentheses(char *input);
 
 /*
  * Function that gets a number as a string (including + or - in front of the number) and checks if it is a whole number.
@@ -122,6 +132,6 @@ bool check_invalid_parentheses(char * input);
  * @param number - The string that represents the number.
  * @return True if it is, false otherwise
  */
-bool is_whole_number(char * number);
+bool is_whole_number(char *number);
 
 #endif

@@ -43,7 +43,7 @@ macroNode *create_macro_node(char *macro_name, char *macro_content) {
     return temp;
 }
 
-labelNode *create_label_node(char * label_name, short address, labelType type){
+labelNode *create_label_node(char * label_name, unsigned short address, labelType type){
     labelNode *temp = NULL;
     temp = malloc(sizeof(labelNode));
     if(temp == NULL)
@@ -202,9 +202,20 @@ void print_bits(codeWord word) {
     }
 }
 
-void init_instr_parts(instrParts * ptr){
-    ptr->label = NULL;
-    ptr->type = NONE;
-    ptr->length.string_length = 0;
-    ptr->data.string = NULL;
+void init_struct_parts(instrParts * iptr, commandParts * cptr){
+    if(iptr != NULL) {
+        iptr->label = NULL;
+        iptr->type = NONE;
+        iptr->length.string_length = 0;
+        iptr->data.string = NULL;
+    }
+    else{
+        cptr->label = NULL;
+        cptr->op_code = 0;
+        cptr->dst = NULL;
+        cptr->src = NULL;
+        cptr->dst_mode = INIT;
+        cptr->src_mode = INIT;
+    }
 }
+

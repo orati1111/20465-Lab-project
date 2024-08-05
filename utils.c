@@ -43,23 +43,28 @@ char *add_file_extension(char *base_file_name, char *extension) {
 }
 
 bool is_name_legal(char *name) {
-    int index;
-    /* Iterating the arrays and comparing the given name to the reserved names */
-    /* Operations names: */
-    for (index = 0; index < NUM_OF_OPS; index++) {
-        if (strcmp(op_names[index], name) == 0)
-            return false;
-    }
-    /* Registers names */
-    for (index = 0; index < NUM_OF_REGISTERS; index++) {
-        if (strcmp(registers[index], name) == 0)
-            return false;
-    }
     /* Name as the macro declaration */
     if (strcmp(name, "macr") == 0 || strcmp(name, "endmacr") == 0)
         return false;
-    return true;
+    return (is_name_op_name(name) == -1) && !is_name_register(name);
 
+}
+short is_name_op_name(char * name){
+    short index;
+    for (index = 0; index < NUM_OF_OPS; index++) {
+        if (strcmp(op_names[index], name) == 0)
+            return index;
+    }
+    return -1;
+}
+
+bool is_name_register(char * name){
+    int index;
+    for (index = 0; index < NUM_OF_REGISTERS; index++) {
+        if (strcmp(registers[index], name) == 0)
+            return true;
+    }
+    return false;
 }
 
 char *strdupli(char *original) {
@@ -77,6 +82,8 @@ char *remove_spaces(const char *str) {
     char *result = NULL;
     j = 0;
 
+    if(str == NULL)
+        return NULL;
     length = strlen(str);
     result = malloc(length + 1);
     /* Copying only the chars that aren't spaces to the new string */
@@ -164,6 +171,9 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
             else {
                 strcpy(cpy,buffer);
                 remove_leading_spaces(cpy);
+                /* The line is a comment */
+                if(cpy[0] == ';')
+                    continue;
                 fprintf(fp_am, "%s", cpy);
             }
         }
@@ -186,18 +196,6 @@ void set_opcode_binary(codeWord *word, char opcode) {
     word->bits[1] |= (opcode << 3);
 }
 
-int is_op_name(char *op_name) {
-    int op_code = -1;
-    int index;
-    for (index = 0; index < NUM_OF_OPS; index++) {
-        if (strcmp(op_name, op_names[index]) == 0) {
-            op_code = index;
-            break;
-        }
-    }
-    return op_code;
-}
-
 void cleanup(const char * order, ...){
     va_list args;
     char *str = NULL;
@@ -205,6 +203,7 @@ void cleanup(const char * order, ...){
     FILE *fp = NULL;
     labelNode *label_node = NULL;
     instrParts *instruction = NULL;
+    commandParts *command =  NULL;
     const char * ptr = NULL;
 
     va_start(args, order);
@@ -223,8 +222,9 @@ void cleanup(const char * order, ...){
         }
         if(*ptr == 'l'){
             label_node = va_arg(args, labelNode *);
-            if(label_node != NULL)
+            if(label_node != NULL){
                 free(label_node);
+            }
         }
         if(*ptr == 'i'){
             instruction = va_arg(args, instrParts *);
@@ -235,6 +235,11 @@ void cleanup(const char * order, ...){
             numbers = va_arg(args, int *);
             if(numbers != NULL)
                 free(numbers);
+        }
+        if(*ptr == 'c'){
+            command = va_arg(args, commandParts *);
+            if(command != NULL)
+                free(command);
         }
     }
 

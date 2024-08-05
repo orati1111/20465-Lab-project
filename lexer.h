@@ -34,16 +34,21 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
  * @param macro_head - Double pointer to the head of the macro list.
  * @param label_head - Double pointer to the head of the label list.
  * @param line_number - The number of the line given in the file.
+ * @para, DC - The data counter of the memory.
  * @return Pointer to the instrParts created, NULL otherwise.
  */
-instrParts *construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number);
+instrParts *construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short DC);
 
 /*
  * Function that constructs a command from a given line.
  * @param line - The line to check.
- * @param
+ * @param macro_head - Double pointer to the head of the macro list.
+ * @param label_head - Double pointer to the head of the label list.
+ * @param line_number - The number of the line in the file.
+ * @param IC - the command counter of the memory.
+ * @return Pointer to the commandParts created, NULL otherwise.
  */
-commandParts * construct_command(char *line , );
+commandParts * construct_command(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short IC);
 
 /*
  * Function that checks if there is a label declaration in the line.
@@ -62,6 +67,18 @@ char *line_is_label_decl(char *line);
  */
 int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type);
 
+/*
+ * Function that handles the whole process of label declaration, validation and creation.
+ * @param line - The line of the label declaration.
+ * @param label_name - The name of the label.
+ * @param macro_head - Double pointer to the head of the macro list.
+ * @param macro_head - Double pointer to the head of the label list.
+ * @param type - The type of the label.
+ * @param line_number - The number of the line.
+ * @param memory_counter - The location in memory (DC or IC)
+ * @param The node of the label, NULL otherwise.
+ */
+Node * handle_label_decl(char * line, char *label_name, Node **macro_head, Node **label_head, labelType type , int line_number,unsigned short memory_counter);
 /*
  * Function that gets a .string argument and extracts the string.
  * @param line - The line to extract the argument from.

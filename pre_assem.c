@@ -48,7 +48,7 @@ int start_pre_assem(char *file_name, Node **macro_head) {
 int add_macros_to_list(FILE *fp, Node **head) {
     char buffer[BUFFER_SIZE];
     char cpy[MAX_CHAR_IN_LINE];
-    char *macro_name, *macro_content, *temp_macro_name, *token, *ptr;
+    char *macro_name, *macro_content, *temp_macro_name, *token;
     int line_number = 0;
     macroNode *macro_node = NULL;
     Node *node = NULL, *temp = NULL;
@@ -68,6 +68,8 @@ int add_macros_to_list(FILE *fp, Node **head) {
         }
         strcpy(cpy, buffer);
         token = strtok(cpy, " ");
+        if(token == NULL)
+            continue;
         if (strcmp(token, "macr") == 0) {
             /* Getting the remainder of the macro declaration. */
             temp_macro_name = strtok(NULL, " \n");
@@ -116,8 +118,11 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* All is clear to continue saving the macro into the linked list */
             fgetpos(fp, &pos);
             macro_content = save_macro_content(fp, &pos, &line_number);
-            if (macro_content == NULL)
-                exit(0);
+            if (macro_content == NULL){
+                cleanup("s",macro_name);
+                no_error = false;
+                continue;
+            }
             macro_node = create_macro_node(macro_name, macro_content);
             if (macro_node == NULL) {
                 generate_error(ERROR_MALLOC_FAILED, -1,"");
@@ -127,22 +132,13 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Since we are duplicating the strings, they should be freed. */
             cleanup("ss",macro_name, macro_content);
             node = create_node(macro_node, sizeof(macroNode), MACRO);
-            free(macro_node);
+            free(macro_node); /* TODO: check here if it frees correctly */
             if (node != NULL) {
                 add_node(head, node);
             } else {
                 free_list(head, MACRO, ALL);
                 generate_error(ERROR_COULDNT_CREATE_NODE, -1,"");
                 exit(0);
-            }
-        }
-        if (strstr(token, "endmacr") != NULL) {
-            ptr = strstr(buffer, "endmacr");
-            ptr += strlen("endmacr");
-            if (check_extra_text(ptr, buffer) == true) {
-                no_error = false;
-                generate_error(ERROR_EXTRA_TEXT_AFTER_ENDMACR, line_number,buffer);
-                continue;
             }
         }
     }
@@ -164,17 +160,27 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         return NULL;
     }
     while (fgets(buffer, BUFFER_SIZE, fp) != NULL) {
-        fgetpos(fp, pos);
-        /* Checking if endmacr is a substring */
-        if (strstr(buffer, "endmacr") != NULL)
-            break;
         strcpy(cpy,buffer);
         remove_leading_spaces(cpy);
         current_line_size = strlen(cpy);
         (*line_number)++;
+        fgetpos(fp, pos);
+
+        /* Checking if endmacr is a substring */
+        if (strstr(cpy, "endmacr") != NULL){
+            /* Checking if there is extra text after endmacr */
+            remove_trailing_spaces(cpy);
+            if(strlen(cpy) != strlen("endmacr")){
+                generate_error(ERROR_EXTRA_TEXT_AFTER_ENDMACR, *line_number,buffer);
+                cleanup("s",content);
+                return NULL;
+            }
+        }
+
         /* Checking if there is a comment inside the macro, skipping it. */
         if(line_is_comment(cpy))
             continue;
+
         /* Checking if adding the new line exceeds the current size of the content */
         if (content_actual_size + current_line_size + 1 > size) {
             size *= 2;

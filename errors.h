@@ -33,7 +33,10 @@
 #define ERR_MSG_COMMA_AT_START "Invalid .data instruction - comma before first number."
 #define ERR_MSG_COMMA_AT_END "Invalid .data instruction - comma after last number."
 #define ERR_MSG_MULTIPLE_COMMAS "Invalid .data instruction - multiple commas in a row."
-#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers (-x for negative numbers, +x or x for positive)"
+#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,32767] (-x for negative numbers, +x or x for positive)"
+#define ERR_MSG_EXTERN_ENTRY "A label cannot be both entry and extern."
+#define ERR_MSG_UNKNOWN_OP_NAME "Unknown opcode detected."
+#define ERR_MSG_LABEL_EMPTY_DECL "Empty label declaration."
 
 /* The Error to number mapping */
 enum {
@@ -57,6 +60,11 @@ enum {
     ERROR_EXTERN_AS_LOCAL,
     ERROR_LOCAL_AS_EXTERN,
     ERROR_LABEL_ALREADY_EXISTS,
+    ERROR_EXTERN_ENTRY,
+    ERROR_LABEL_EMPTY_DECL,
+
+    /* Op and arguments Errors */
+    ERROR_UNKNOWN_OP_NAME,
 
     /* .String Errors */
     ERROR_INVALID_STRING_FORMAT,

@@ -23,7 +23,8 @@ typedef enum {
     IMMEDIATE,
     DIRECT,
     INDIRECT_REG,
-    DIRECT_REG
+    DIRECT_REG,
+    INIT
 
 } addressMode;
 
