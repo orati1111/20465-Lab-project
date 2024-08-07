@@ -42,8 +42,8 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
     fseek(fp_am, 0, SEEK_SET);
 
     /* Read the file content */
-    /* TODO: add a memory overflow IC DC break condition */
-    while (fgets(buffer, BUFFER_SIZE, fp_am) != NULL) {
+    /* MAX_MEMORY_SIZE - OFFSET -> The memory size minus the 100 spaces that are not allowed to be used at the start */
+    while ((fgets(buffer, BUFFER_SIZE, fp_am) != NULL) && ( IC+DC < MAX_MEMORY_SIZE - OFFSET )) {
         line_number++;
         buffer[strlen(buffer)] = '\0';
         /* Checking if the line is too long */
@@ -111,7 +111,6 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
             command = construct_command(cpy, macro_head, label_head, line_number, IC);
             if (command != NULL) {
                 /* TODO: remove */
-                printf("%d\n",command->op_code);
                 cleanup("c", command);
             }
         }

@@ -46,7 +46,7 @@ bool is_name_legal(char *name) {
     /* Name as the macro declaration */
     if (strcmp(name, "macr") == 0 || strcmp(name, "endmacr") == 0)
         return false;
-    return (is_name_op_name(name) == -1) && !is_name_register(name);
+    return (is_name_op_name(name) == -1) && !is_name_register(name) && isalpha(name[0]);
 
 }
 short is_name_op_name(char * name){
@@ -67,8 +67,21 @@ bool is_name_register(char * name){
     return false;
 }
 
+bool is_name_alphanumeric(char * name){
+    char * ptr = NULL;
+    ptr = name;
+    while(*ptr != '\0'){
+        if(!isalnum(*ptr))
+            return false;
+        ptr++;
+    }
+    return true;
+}
+
 char *strdupli(char *original) {
     char *cpy = NULL;
+    if(original == NULL)
+        return NULL;
     cpy = (char *) malloc(strlen(original) + 1);
     if (cpy == NULL)
         return NULL;

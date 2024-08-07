@@ -7,6 +7,21 @@
 
 #include "globals.h"
 #include "data_structures.h"
+#include "utils.h"
+
+/*
+ * Structure to map each operand with its op_code , number of arguments and allowed address modes
+ *  char * op_name - The name of the operand.
+ *  short n_args - The number of allowed arguments to a given operand.
+ *  short src_mode[4] - Array that represents the allowed address modes for the source. for example [1,1,0,0] means only address modes 0 and 1 are allowed.
+ *  short dst_mode[4] - Array that represents the allowed address modes for the destination.
+ */
+typedef struct opMapping{
+    char * op_name;
+    short n_args;
+    short src_mode[NUM_OF_ADDRESS_MODES];
+    short dst_mode[NUM_OF_ADDRESS_MODES];
+} opMapping;
 
 /*
  * Function that checks if a given line is a comment and should be ignored.
@@ -104,5 +119,42 @@ int *get_data(char *line, int line_number, short * num_of_numbers);
  * @param num_of_numbers - A pointer to store the amount of numbers.
  */
 int * get_numbers(char * cpy, int line_number, char * line, short * num_of_numbers);
+
+/*
+ * Function that gets a string , separates it to arguments and checks if they are valid.
+ * Validating the number of arguments, address modes according to the given op_code.
+ * @param arguments - The string that contains the arguments (Could be NULL)
+ * @param command - Pointer to the commandParts struct to store the information in.
+ * @return Error number that represents an error that occurred during the function, NO_ERROR otherwise.
+ */
+int handle_arguments(char * arguments, commandParts * command);
+
+/*
+ * Function that counts the amount of arguments in a given string.
+ * If there is an error not related to the amount of arguments, set it to the error pointer.
+ * @param arguments - The string of arguments.
+ * @param error - A pointer to the error variable.
+ * @return The amount of arguments.
+ */
+int count_arguments(char *arguments, int *error);
+
+/*
+ * Function that validates the arguments given based on the amount presented.
+ * Validating the src and dst address codes, the content of the arguments, etc.
+ * @param arguments - The string of arguments.
+ * @param command - A pointer to the commandParts struct
+ * @param number_of_arguments - The amount of arguments that should be.
+ * @return NO_ERROR if it succeeded, error_number otherwise.
+ */
+int validate_store_arguments(char * arguments, commandParts * command, int number_of_arguments);
+
+
+/*
+ * Function that gets an argument and checks to what address mode does it belong.
+ * @param argument - The argument to check.
+ * @param error - Pointer to the error.
+ * @return The number of address_mode , error otherwise.
+ */
+int get_address_mode(char * argument, int * error);
 
 #endif

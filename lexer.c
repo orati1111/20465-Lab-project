@@ -9,6 +9,23 @@
 #include "utils.h"
 #include "errors.h"
 
+opMapping op_mappings[NUM_OF_OPS] = {{"mov",  2, {1, 1, 1, 1}, {0, 1, 1, 1}},
+                                     {"cmp",  2, {1, 1, 1, 1}, {1, 1, 1, 1}},
+                                     {"add",  2, {1, 1, 1, 1}, {0, 1, 1, 1}},
+                                     {"sub",  2, {1, 1, 1, 1}, {0, 1, 1, 1}},
+                                     {"lea",  2, {0, 1, 0, 0}, {0, 1, 1, 1}},
+                                     {"clr",  1, {0, 0, 0, 0}, {0, 1, 1, 1}},
+                                     {"not",  1, {0, 0, 0, 0}, {0, 1, 1, 1}},
+                                     {"inc",  1, {0, 0, 0, 0}, {0, 1, 1, 1}},
+                                     {"dec",  1, {0, 0, 0, 0}, {0, 1, 1, 1}},
+                                     {"jmp",  1, {0, 0, 0, 0}, {0, 1, 1, 0}},
+                                     {"bne",  1, {0, 0, 0, 0}, {0, 1, 1, 0}},
+                                     {"red,", 1, {0, 0, 0, 0}, {0, 1, 1, 1}},
+                                     {"prn",  1, {0, 0, 0, 0}, {1, 1, 1, 1}},
+                                     {"jsr",  1, {0, 0, 0, 0}, {0, 1, 1, 0}},
+                                     {"rts",  0, {0, 0, 0, 0}, {0, 0, 0, 0}},
+                                     {"stop", 0, {0, 0, 0, 0}, {0, 0, 0, 0}}};
+
 
 bool line_is_comment(char *line) {
     return line[0] == ';';
@@ -207,13 +224,9 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
     }
     command->op_code = op_code;
     /* Get the arguments */
-    if ((error = get_arguments(remaining, command)) != NO_ERROR) {
+    if ((error = handle_arguments(remaining, command)) != NO_ERROR) {
         generate_error(error, line_number, line);
     }
-
-
-    /* TODO: Map the number of required arguments to the given operand */
-    /* TODO: Map type of address codes to arguments to a given operand */
 
 
     /* TODO: Store all the information inside the command and return it*/
@@ -249,7 +262,8 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
         return ERROR_LABEL_NAME_TOO_LONG;
     }
     /* Check if the name is a macro name , opcode or register.*/
-    if (search_node(*macro_head, label_name, MACRO) != NULL || is_name_legal(label_name) == false) {
+    if (search_node(*macro_head, label_name, MACRO) != NULL || is_name_legal(label_name) == false ||
+        is_name_alphanumeric(label_name) == false) {
         return ERROR_ILLEGAL_LABEL_NAME;
     }
     if ((temp = search_node(*label_head, label_name, LABEL)) != NULL) {
@@ -352,39 +366,40 @@ int *get_data(char *line, int line_number, short *num_of_numbers) {
     ptr = strstr(cpy, ".data");
     ptr += strlen(keyword);
 
-    ptr = remove_spaces(ptr);
+    remove_leading_spaces(ptr);
+    remove_trailing_spaces(ptr);
 
     /* The data is empty */
     if (ptr[0] == '\0') {
         generate_error(ERROR_DATA_EMPTY, line_number, line);
-        cleanup("ss", cpy, ptr);
+        cleanup("s", cpy);
         return NULL;
     }
 
     /* There is a comma before the first number */
     if (ptr[0] == ',') {
-        generate_error(ERROR_DATA_COMMA_AT_START, line_number, line);
-        cleanup("ss", cpy, ptr);
+        generate_error(ERROR_COMMA_AT_START, line_number, line);
+        cleanup("s", cpy);
         return NULL;
     }
 
     /* There is a comma after the last number */
     if (ptr[strlen(ptr) - 1] == ',') {
-        generate_error(ERROR_DATA_COMMA_AT_END, line_number, line);
-        cleanup("ss", cpy, ptr);
+        generate_error(ERROR_COMMA_AT_END, line_number, line);
+        cleanup("s", cpy);
         return NULL;
     }
 
     /* There is multiple commas in a row */
     if (check_multiple_commas(cpy) == true) {
-        generate_error(ERROR_DATA_MULTIPLE_COMMAS, line_number, line);
-        cleanup("ss", cpy, ptr);
+        generate_error(ERROR_MULTIPLE_COMMAS, line_number, line);
+        cleanup("s", cpy);
         return NULL;
     }
 
     /* Get that numbers */
     numbers = get_numbers(ptr, line_number, line, num_of_numbers);
-    cleanup("ss", cpy, ptr);
+    cleanup("s", cpy);
     return numbers;
 
 }
@@ -406,6 +421,8 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
     /* Tokenizing by ',' */
     token = strtok(cpy, ",");
     while (token != NULL) {
+        remove_leading_spaces(token);
+        remove_trailing_spaces(token);
         if (is_whole_number(token)) {
             /* There is not enough space. reallocate */
             if (count >= capacity) {
@@ -420,7 +437,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
                 }
             }
             number = atoi(token);
-            if (number > DATA_NUMBER_UPPER_LIMIT || number < DATA_NUMBER_LOWER_LIMIT) {
+            if (number > BITS_15_MAX_NUMBER || number < BITS_15_MIN_NUMBER) {
                 cleanup("n", numbers);
                 generate_error(ERROR_DATA_INVALID_INPUT, line_number, line);
                 return NULL;
@@ -442,16 +459,180 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
 
 }
 
-int get_arguments(char * arguments, commandParts * command){
+int handle_arguments(char *arguments, commandParts *command) {
     int op_code = command->op_code;
-    char * token = NULL;
-    /* TODO: Get arguments */
-    /* TODO: Check if enough arguments */
+    char *token = NULL;
+    int number_of_arguments;
+    int error = NO_ERROR;
+
+
+    /* Count the amount of arguments. */
+    number_of_arguments = count_arguments(arguments, &error);
+    /* In case an error not related to the amount of arguments has occurred. */
+    if (error != NO_ERROR)
+        return error;
+    if (number_of_arguments != op_mappings[op_code].n_args) {
+        error = ERROR_INVALID_AMOUNT_OF_ARGUMENTS;
+        return error;
+    }
+    /* Validate the arguments, content and store them if needed */
+    if ((error = validate_store_arguments(arguments, command, number_of_arguments)) != NO_ERROR) {
+        return error;
+    }
+
+
     /* TODO: Look for address codes */
     /* TODO: check arguments - register? label? number? */
     /* TODO: label? if it doesnt exist , continue to look for it in the second pass */
     /* TODO: label name is macro name? ERROR */
     /* Cases */
+    return error;
+}
+
+int count_arguments(char *arguments, int *error) {
+    char *cpy = NULL;
+    char *clean_input = NULL;
+    char *token = NULL;
+    int count = 0;
+
+    /* In case there are no arguments */
+    if (arguments == NULL)
+        return count;
+
+    cpy = strdupli(arguments);
+    if (cpy == NULL)
+        return ERROR_MALLOC_FAILED;
+    clean_input = remove_spaces(cpy);
+    if (clean_input == NULL) {
+        cleanup("s", cpy);
+        *error = ERROR_MALLOC_FAILED;
+    }
+
+    if (check_multiple_commas(clean_input) == true) {
+        *error = ERROR_MULTIPLE_COMMAS;
+        cleanup("ss", cpy, clean_input);
+        return count;
+    }
+    token = strtok(clean_input, ",");
+    while (token != NULL) {
+        count++;
+        token = strtok(NULL, ",");
+    }
+    cleanup("ss", cpy, clean_input);
+    return count;
+}
+
+int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments) {
+    char *token = NULL;
+    char *cpy = NULL;
+    int op_code = command->op_code;
+    int src_address_mode;
+    int dst_address_mode;
+    int error = NO_ERROR;
+
+    /* No arguments needed to be checked */
+    if (number_of_arguments == 0)
+        return NO_ERROR;
+
+    cpy = strdupli(arguments);
+    if (cpy == NULL)
+        return ERROR_MALLOC_FAILED;
+
+    remove_leading_spaces(cpy);
+    remove_trailing_spaces(cpy);
+
+    if (number_of_arguments == 1) {
+        dst_address_mode = get_address_mode(cpy, &error);
+        cleanup("s", cpy);
+        if (error != NO_ERROR) {
+            return error;
+        }
+        else if (dst_address_mode == NOT_LEGAL) {
+            return ERROR_INVALID_INPUT;
+        }
+            /* Checking if the address mode that was found is valid according to the opcode mapping */
+        else if (op_mappings[op_code].dst_mode[dst_address_mode] != 1) {
+            return ERROR_INVALID_ADDRESS_MODE;
+        }
+            /* Storing the argument*/
+        else {
+            command->dst_mode = dst_address_mode;
+            command->dst = arguments;
+            printf("MODE: %d\n", dst_address_mode);
+            printf("ARG: '%s'\n", arguments);
+        }
+    } else if (number_of_arguments == 2) {
+        printf("2: %s\n", cpy);
+        cleanup("s", cpy);
+    }
+
+
+    return error;
+}
+
+int get_address_mode(char *argument, int *error) {
+    char *ptr = NULL;
+    char *temp = NULL;
+
+    /* Immediate */
+    if ((ptr = strchr(argument, '#')) != NULL) {
+        ptr = strdupli(ptr);
+        /* Getting a pointer to the start inorder to free it.*/
+        temp = ptr;
+        if (ptr == NULL) {
+            *error = ERROR_MALLOC_FAILED;
+            return NOT_LEGAL;
+        }
+        /* Moving the pointer to the next character */
+        ptr++;
+        /* TODO: maybe check space here? if its legal */
+        remove_trailing_spaces(ptr);
+        if (is_whole_number(ptr) == false) {
+            *error = ERROR_IMID_MODE_INVALID_INPUT;
+        }
+
+        cleanup("s", temp);
+        if(*error != NO_ERROR)
+            return NOT_LEGAL;
+        else
+            return IMMEDIATE;
+
+    }
+
+        /* Direct */
+    else if ((ptr = strchr(argument, '*')) != NULL) {
+        ptr = strdupli(ptr);
+        if (ptr == NULL) {
+            *error = ERROR_MALLOC_FAILED;
+            return NOT_LEGAL;
+        }
+        temp = ptr;
+        ptr++;
+        remove_trailing_spaces(ptr);
+
+        if (is_name_register(ptr) == false) {
+            *error = ERROR_UNKNOWN_REGISTER;
+        }
+        if (strlen(ptr) != 2) {
+            *error = ERROR_IND_REG_INVALID;
+        }
+        cleanup("s",temp);
+        if(*error != NO_ERROR){
+            return NOT_LEGAL;
+        }
+        else{
+            return INDIRECT_REG;
+        }
+
+    }
+
+    /* Indirect register */
+
+
+    /* Direct reg */
+
+
+    return NOT_LEGAL;
 }
 
 

@@ -24,7 +24,8 @@ typedef enum {
     DIRECT,
     INDIRECT_REG,
     DIRECT_REG,
-    INIT
+    INIT,
+    NOT_LEGAL
 
 } addressMode;
 

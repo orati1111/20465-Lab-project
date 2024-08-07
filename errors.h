@@ -30,13 +30,19 @@
 #define ERR_MSG_LOCAL_AS_EXTERN "Attempt to declare local label as extern label"
 #define ERR_MSG_INVALID_STRING_FORMAT "In .string instruction, the string should be enclosed with \"string\". "
 #define ERR_MSG_DATA_EMPTY "There are no numbers after .data instruction - should be one or more."
-#define ERR_MSG_COMMA_AT_START "Invalid .data instruction - comma before first number."
-#define ERR_MSG_COMMA_AT_END "Invalid .data instruction - comma after last number."
-#define ERR_MSG_MULTIPLE_COMMAS "Invalid .data instruction - multiple commas in a row."
-#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,32767] (-x for negative numbers, +x or x for positive)"
+#define ERR_MSG_COMMA_AT_START "Invalid input - comma before first input"
+#define ERR_MSG_COMMA_AT_END "Invalid input - comma after last input"
+#define ERR_MSG_MULTIPLE_COMMAS "Invalid input - multiple commas in a row."
+#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,32767] (-x for negative numbers, +x or x for positive) seperated by commas"
 #define ERR_MSG_EXTERN_ENTRY "A label cannot be both entry and extern."
 #define ERR_MSG_UNKNOWN_OP_NAME "Unknown opcode detected."
 #define ERR_MSG_LABEL_EMPTY_DECL "Empty label declaration."
+#define ERR_MSG_INVALID_AMOUNT_OF_ARGS "Invalid amount of arguments to the given opcode."
+#define ERR_MSG_INVALID_ADDRESS_MODE "Invalid address mode found for the given opcode."
+#define ERR_MSG_INVALID_INPUT "Invalid input."
+#define ERR_MSG_IMID_MODE_INVALID_NUMBER "In address mode immediate, The number should be whole in [-2048, 2047]"
+#define ERR_MSG_IND_REG_INVALID "In address mode indirect register, There should be a register following the *."
+#define ERR_MSG_UNKNOWN_REGISTER "Unknown register name, r0-r7 are allowed."
 
 /* The Error to number mapping */
 enum {
@@ -65,15 +71,22 @@ enum {
 
     /* Op and arguments Errors */
     ERROR_UNKNOWN_OP_NAME,
+    ERROR_INVALID_AMOUNT_OF_ARGUMENTS,
+    ERROR_INVALID_ADDRESS_MODE,
+    ERROR_INVALID_INPUT,
+    ERROR_IMID_MODE_INVALID_INPUT,
+    ERROR_IND_REG_INVALID,
+    ERROR_UNKNOWN_REGISTER,
 
     /* .String Errors */
     ERROR_INVALID_STRING_FORMAT,
 
     /* .Data Errors */
     ERROR_DATA_EMPTY,
-    ERROR_DATA_COMMA_AT_START,
-    ERROR_DATA_COMMA_AT_END,
-    ERROR_DATA_MULTIPLE_COMMAS,
+    /* General */
+    ERROR_COMMA_AT_START,
+    ERROR_COMMA_AT_END,
+    ERROR_MULTIPLE_COMMAS,
     ERROR_DATA_INVALID_INPUT,
 
     /* File Errors */

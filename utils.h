@@ -10,7 +10,6 @@
 /* File Extensions */
 #define AS_EXTENSION ".as"
 #define AM_EXTENSION ".am"
-#define TMP_EXTENSION ".tmp"
 
 /* Limiters */
 #define MAX_CHAR_IN_LINE 82
@@ -20,9 +19,31 @@
 #define MAX_MSG_LENGTH 256
 #define MAX_MACRO_LENGTH 31
 #define INITIAL_CONTENT_SIZE 64
-#define DATA_NUMBER_UPPER_LIMIT 32767
-#define DATA_NUMBER_LOWER_LIMIT -16384
+#define BITS_15_MAX_NUMBER 16383
+#define BITS_15_MIN_NUMBER -16384
+#define BITS_12_MAX_NUMBER 2047
+#define BITS_12_MIN_NUMBER -2048
 #define MAX_MEMORY_SIZE 4096
+#define OFFSET 100
+#define NUM_OF_ADDRESS_MODES 4
+
+/* OP mapping */
+#define MOV 0
+#define CMP 1
+#define ADD 2
+#define SUB 3
+#define LEA 4
+#define CLR 5
+#define NOT 6
+#define INC 7
+#define DEC 8
+#define JMP 9
+#define BNE 10
+#define RED 11
+#define PRN 12
+#define JSR 13
+#define RTS 14
+#define STOP 15
 
 
 /*
@@ -54,6 +75,13 @@ short is_name_op_name(char *name);
  * @return True if it is, false otherwise.
  */
 bool is_name_register(char *name);
+
+/*
+ * Function that checks the characters of a given string that they are only letters or numbers.
+ * @param name - The name.
+ * @return True if it contains only numbers and letters, false otherwise.
+ */
+bool is_name_alphanumeric(char * name);
 
 /*
  * Function that replicates the strdup functionality(Which isn't C90).

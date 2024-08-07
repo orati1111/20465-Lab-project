@@ -84,7 +84,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Removing the spaces from the macro name (if there are any) */
             macro_name = remove_spaces(temp_macro_name);
             /* Checking if the given macro name is a reserved word or an invalid name. */
-            if (is_name_legal(macro_name) == false || isalpha(macro_name[0]) == false) {
+            if (is_name_legal(macro_name) == false) {
                 generate_error(ERROR_ILLEGAL_MACRO_NAME, line_number,buffer);
                 cleanup("s",macro_name);
                 no_error = false;
