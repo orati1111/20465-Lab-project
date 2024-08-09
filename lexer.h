@@ -78,9 +78,13 @@ char *line_is_label_decl(char *line);
  * @param macro_head - Double pointer to the head of the macro list.
  * @param label_head - Double pointer to the head of the label list.
  * @param labelType - The type of the label.
+ * @param memory_counter - The location in memory (DC or IC).
+ * @param replace_flag - Pointer to a flag that represents if a memory/type swap should occur
+ * when an entry label exists and a declaration is found, replace the memory address.
+ * when a local label exists and .entry was found, replace the label type.
  * @return NO_ERROR if the name is valid, error_number otherwise.
  */
-int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type);
+int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type, unsigned short memory_counter, int * replace_flag);
 
 /*
  * Function that handles the whole process of label declaration, validation and creation.
@@ -94,13 +98,13 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
  * @param The node of the label, NULL otherwise.
  */
 Node * handle_label_decl(char * line, char *label_name, Node **macro_head, Node **label_head, labelType type , int line_number,unsigned short memory_counter);
+
 /*
  * Function that gets a .string argument and extracts the string.
  * @param line - The line to extract the argument from.
  * @return The argument, NULL otherwise.
  */
 char *get_string(const char *line);
-
 
 /*
  * Function that gets the .data string, validates it and returns the number array
@@ -127,7 +131,7 @@ int * get_numbers(char * cpy, int line_number, char * line, short * num_of_numbe
  * @param command - Pointer to the commandParts struct to store the information in.
  * @return Error number that represents an error that occurred during the function, NO_ERROR otherwise.
  */
-int handle_arguments(char * arguments, commandParts * command);
+int handle_arguments(char * arguments, commandParts * command,Node **macro_head);
 
 /*
  * Function that counts the amount of arguments in a given string.
@@ -146,15 +150,16 @@ int count_arguments(char *arguments, int *error);
  * @param number_of_arguments - The amount of arguments that should be.
  * @return NO_ERROR if it succeeded, error_number otherwise.
  */
-int validate_store_arguments(char * arguments, commandParts * command, int number_of_arguments);
+int validate_store_arguments(char * arguments, commandParts * command, int number_of_arguments, Node **macro_head);
 
 
 /*
  * Function that gets an argument and checks to what address mode does it belong.
  * @param argument - The argument to check.
  * @param error - Pointer to the error.
+ * @param macro_head - Double pointer to the head of the macro list.
  * @return The number of address_mode , error otherwise.
  */
-int get_address_mode(char * argument, int * error);
+int get_address_mode(char * argument, int * error , Node **macro_head);
 
 #endif

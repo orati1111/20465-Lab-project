@@ -1,6 +1,9 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#define ENTRY_TO_LOCAL 0
+#define LOCAL_TO_ENTRY 1
+
 /* Boolean */
 typedef enum {
     false,

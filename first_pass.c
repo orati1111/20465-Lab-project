@@ -14,13 +14,13 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
     char buffer[BUFFER_SIZE];
     char cpy[MAX_CHAR_IN_LINE];
     codeWord *memory[MAX_MEMORY_SIZE];
+    codeWord code;
+    int test;
     char *am_file = NULL;
 
     int i;
 
     FILE *fp_am = NULL;
-
-    labelNode *tempa = NULL;
 
     instrParts *instruction = NULL;
     commandParts *command = NULL;
@@ -70,7 +70,7 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
                 construct_extern_entry(cpy, macro_head, label_head, line_number, &num_of_entries, &num_of_externs);
                 /* TODO: probably do something here */
             }
-            if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
+            else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
                 instruction = construct_instruction(cpy, macro_head, label_head, line_number, DC);
                 if (instruction == NULL) {
                     no_error = false;
@@ -79,24 +79,22 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
                     /* TODO: delete this */
 
                     if (instruction->type == DATA) {
-                        if (instruction->label != NULL) {
-                            tempa = (labelNode *) instruction->label->data;
-                            printf("LABEL NAME: %s\n", tempa->label_name);
+
+                        /* encoding the numbers*/
+                        for(i=0;i<instruction->length.amount_of_numbers;i++){
+                            code = encode_instruction(instruction->data.numbers[i]);
                         }
-                        printf("CONTENT: ");
-                        for (i = 0; i < instruction->length.amount_of_numbers; i++) {
-                            printf("%d ", instruction->data.numbers[i]);
-                        }
-                        printf("\n");
-                        cleanup("ni", instruction->data.numbers, instruction);
+                        DC += instruction->length.amount_of_numbers;
+                        cleanup("i",instruction);
+
                     } else if (instruction->type == STRING) {
-                        if (instruction->label != NULL) {
-                            tempa = (labelNode *) instruction->label->data;
-                            printf("LABEL NAME: %s\n", tempa->label_name);
+
+                        /* encoding the string letters*/
+                        for(i=0;i<instruction->length.string_length;i++){
+                            code = encode_instruction(instruction->data.string[i]);
                         }
-                        printf("CONTENT: ");
-                        printf("%s\n", instruction->data.string);
-                        cleanup("si", instruction->data.string, instruction);
+                        DC += instruction->length.string_length;
+                        cleanup("i", instruction);
                     }
                 }
 

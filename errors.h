@@ -30,8 +30,7 @@
 #define ERR_MSG_LOCAL_AS_EXTERN "Attempt to declare local label as extern label"
 #define ERR_MSG_INVALID_STRING_FORMAT "In .string instruction, the string should be enclosed with \"string\". "
 #define ERR_MSG_DATA_EMPTY "There are no numbers after .data instruction - should be one or more."
-#define ERR_MSG_COMMA_AT_START "Invalid input - comma before first input"
-#define ERR_MSG_COMMA_AT_END "Invalid input - comma after last input"
+#define ERR_MSG_INVALID_COMMA "Invalid input - invalid comma placement."
 #define ERR_MSG_MULTIPLE_COMMAS "Invalid input - multiple commas in a row."
 #define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,32767] (-x for negative numbers, +x or x for positive) seperated by commas"
 #define ERR_MSG_EXTERN_ENTRY "A label cannot be both entry and extern."
@@ -84,8 +83,7 @@ enum {
     /* .Data Errors */
     ERROR_DATA_EMPTY,
     /* General */
-    ERROR_COMMA_AT_START,
-    ERROR_COMMA_AT_END,
+    ERROR_INVALID_COMMA,
     ERROR_MULTIPLE_COMMAS,
     ERROR_DATA_INVALID_INPUT,
 

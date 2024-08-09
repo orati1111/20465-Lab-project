@@ -13,6 +13,7 @@
 
 /* Limiters */
 #define MAX_CHAR_IN_LINE 82
+#define SIZE_OF_WORD 15
 #define BUFFER_SIZE 256
 #define NUM_OF_OPS 16
 #define NUM_OF_REGISTERS 9
@@ -81,7 +82,7 @@ bool is_name_register(char *name);
  * @param name - The name.
  * @return True if it contains only numbers and letters, false otherwise.
  */
-bool is_name_alphanumeric(char * name);
+bool is_name_alphanumeric(char *name);
 
 /*
  * Function that replicates the strdup functionality(Which isn't C90).
@@ -135,6 +136,11 @@ bool check_extra_text(char *ptr, char *string);
 void set_opcode_binary(codeWord *word, char opcode);
 
 /*
+ * Function that converts integer to binary.
+ * @param input - The input to convert.
+ */
+
+/*
  * Function that frees all the given arguments using stdargs
  * @param order - The order of the given arguments , i.e "fssf" means file,string,string,file.
  */
@@ -145,7 +151,7 @@ void cleanup(const char *order, ...);
  * @param input - The string to check.
  * @return True if there is multiple commas, false otherwise.
  */
-bool check_multiple_commas(char *input);
+int check_multiple_commas(char *input);
 
 /*
  * Function that in a given string, if there is only one parenthesis.
@@ -161,5 +167,41 @@ bool check_invalid_parentheses(char *input);
  * @return True if it is, false otherwise
  */
 bool is_whole_number(char *number);
+
+
+/*
+ * Function that gets an instruction and encodes to bits.
+ * @param instr - Pointer to the instruction struct to encode.
+ * @param code - Pointer to the code to store the encoded instruction.
+ */
+codeWord encode_instruction(int input);
+
+/*
+ * Function that converts int input to binary and store them.
+ * @param input - The number to convert to binary.
+ * @code - Pointer to code ward to store the binary in.
+ */
+void convert_to_binary(int input, codeWord *code);
+
+/*
+ * Function that converts binary to base 8.
+ * @param code - The binary to convert
+ * @return The number in base 8.
+ */
+int convert_binary_to_octal(codeWord code);
+
+/*
+ * Function that checks if there is an invalid comma at the start or the end.
+ * @param line - The string to check
+ * @return ERROR_INVALID_COMMA , NO_ERROR otherwise.
+ */
+int check_commas_at_start_end(char * line);
+
+/*
+ * Function that combines the check_commas_at_start_end and check_multiple_commas to one.
+ * @param line - The string to check.
+ * @return error_number according to the error found, NO_ERROR otherwise.
+ */
+int validate_commas_format(char * line);
 
 #endif

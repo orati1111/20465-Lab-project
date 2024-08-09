@@ -194,12 +194,13 @@ void init_code_word(codeWord *word) {
 void print_bits(codeWord word) {
     int i;
     int byte_index, bit_index, bit;
-    for (i = 15; i >= 0; --i) {
+    for (i = SIZE_OF_WORD-1; i >= 0 ; --i) {
         byte_index = i / 8;
         bit_index = i % 8;
         bit = (word.bits[byte_index] >> bit_index) & 1;
-        printf("%d", bit);
+        printf("%d",bit);
     }
+    printf("\n");
 }
 
 void init_struct_parts(instrParts * iptr, commandParts * cptr){
@@ -216,6 +217,24 @@ void init_struct_parts(instrParts * iptr, commandParts * cptr){
         cptr->src = NULL;
         cptr->dst_mode = INIT;
         cptr->src_mode = INIT;
+        cptr->both_registers = false;
+    }
+}
+
+void free_structs(instrParts *iptr ,commandParts * cptr){
+    if(iptr != NULL) {
+        if(iptr->type == DATA)
+            free(iptr->data.numbers);
+        if(iptr->type == STRING)
+            free(iptr->data.string);
+        free(iptr);
+    }
+    else{
+        if(cptr->src != NULL)
+            free(cptr->src);
+        if(cptr->dst != NULL)
+            free(cptr->dst);
+        free(cptr);
     }
 }
 

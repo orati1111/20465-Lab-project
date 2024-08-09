@@ -30,7 +30,7 @@ char *add_file_extension(char *base_file_name, char *extension) {
     /* Malloc memory for the file name with the extension */
     finalized_file_name = (char *) malloc((finalized_length + 1) * sizeof(char));
     if (finalized_file_name == NULL) {
-        generate_error(ERROR_MALLOC_FAILED, -1,"");
+        generate_error(ERROR_MALLOC_FAILED, -1, "");
         free(finalized_file_name);
         return NULL;
     }
@@ -49,7 +49,8 @@ bool is_name_legal(char *name) {
     return (is_name_op_name(name) == -1) && !is_name_register(name) && isalpha(name[0]);
 
 }
-short is_name_op_name(char * name){
+
+short is_name_op_name(char *name) {
     short index;
     for (index = 0; index < NUM_OF_OPS; index++) {
         if (strcmp(op_names[index], name) == 0)
@@ -58,7 +59,7 @@ short is_name_op_name(char * name){
     return -1;
 }
 
-bool is_name_register(char * name){
+bool is_name_register(char *name) {
     int index;
     for (index = 0; index < NUM_OF_REGISTERS; index++) {
         if (strcmp(registers[index], name) == 0)
@@ -67,11 +68,11 @@ bool is_name_register(char * name){
     return false;
 }
 
-bool is_name_alphanumeric(char * name){
-    char * ptr = NULL;
+bool is_name_alphanumeric(char *name) {
+    char *ptr = NULL;
     ptr = name;
-    while(*ptr != '\0'){
-        if(!isalnum(*ptr))
+    while (*ptr != '\0') {
+        if (!isalnum(*ptr))
             return false;
         ptr++;
     }
@@ -80,7 +81,7 @@ bool is_name_alphanumeric(char * name){
 
 char *strdupli(char *original) {
     char *cpy = NULL;
-    if(original == NULL)
+    if (original == NULL)
         return NULL;
     cpy = (char *) malloc(strlen(original) + 1);
     if (cpy == NULL)
@@ -95,7 +96,7 @@ char *remove_spaces(const char *str) {
     char *result = NULL;
     j = 0;
 
-    if(str == NULL)
+    if (str == NULL)
         return NULL;
     length = strlen(str);
     result = malloc(length + 1);
@@ -108,25 +109,25 @@ char *remove_spaces(const char *str) {
     return result;
 }
 
-void remove_leading_spaces(char * str){
-    int i = 0, j=0;
+void remove_leading_spaces(char *str) {
+    int i = 0, j = 0;
 
-    if(str == NULL)
+    if (str == NULL)
         return;
 
-    while(str[i] && isspace(str[i]))
+    while (str[i] && isspace(str[i]))
         i++;
 
-    while(str[i])
+    while (str[i])
         str[j++] = str[i++];
 
     str[j] = '\0';
 }
 
-void remove_trailing_spaces(char * str){
+void remove_trailing_spaces(char *str) {
     size_t length = strlen(str);
-    while(length > 0 && (str[length-1] == ' ' || str[length-1] == '\t' || str[length-1] == '\n')){
-        str[length-1] = '\0';
+    while (length > 0 && (str[length - 1] == ' ' || str[length - 1] == '\t' || str[length - 1] == '\n')) {
+        str[length - 1] = '\0';
         length--;
     }
 }
@@ -152,15 +153,15 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     fp_am = fopen(am_file, "w");
     /* Couldn't open the file */
     if (fp_am == NULL) {
-        generate_error(ERROR_COULDNT_WRITE_AM_FILE, -1,"");
+        generate_error(ERROR_COULDNT_WRITE_AM_FILE, -1, "");
         remove(am_file);
         return false;
     }
     /* Reading the file */
     while (fgets(buffer, BUFFER_SIZE, fp_as)) {
         strcpy(cpy, buffer);
-        token = strtok(cpy," \n");
-        if(token == NULL || strcmp(token,"") == 0)
+        token = strtok(cpy, " \n");
+        if (token == NULL || strcmp(token, "") == 0)
             continue;
         /* Looking for the start of macro declaration */
         if (strncmp(token, "macr", 4) == 0 && strlen(token) == strlen("macr")) {
@@ -182,10 +183,10 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
             }
                 /* Other */
             else {
-                strcpy(cpy,buffer);
+                strcpy(cpy, buffer);
                 remove_leading_spaces(cpy);
                 /* The line is a comment */
-                if(cpy[0] == ';')
+                if (cpy[0] == ';')
                     continue;
                 fprintf(fp_am, "%s", cpy);
             }
@@ -198,8 +199,8 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
 
 }
 
-bool check_extra_text(char *ptr, char * string){
-    while(*ptr != '\0' && isspace(*ptr)){
+bool check_extra_text(char *ptr, char *string) {
+    while (*ptr != '\0' && isspace(*ptr)) {
         ptr++;
     }
     return *ptr != '\0';
@@ -209,93 +210,93 @@ void set_opcode_binary(codeWord *word, char opcode) {
     word->bits[1] |= (opcode << 3);
 }
 
-void cleanup(const char * order, ...){
+
+void cleanup(const char *order, ...) {
     va_list args;
     char *str = NULL;
-    int * numbers;
+    int *numbers;
     FILE *fp = NULL;
     labelNode *label_node = NULL;
+    Node * node;
     instrParts *instruction = NULL;
-    commandParts *command =  NULL;
-    const char * ptr = NULL;
+    commandParts *command = NULL;
+    const char *ptr = NULL;
 
     va_start(args, order);
-    for(ptr = order; *ptr != '\0'; ptr++){
+    for (ptr = order; *ptr != '\0'; ptr++) {
         /* String */
-        if(*ptr == 's'){
+        if (*ptr == 's') {
             str = va_arg(args, char*);
-            if(str != NULL)
+            if (str != NULL)
                 free(str);
         }
         /* File pointer */
-        if(*ptr == 'f'){
+        if (*ptr == 'f') {
             fp = va_arg(args, FILE *);
             if (fp != NULL)
                 fclose(fp);
         }
-        if(*ptr == 'l'){
+        if (*ptr == 'l') {
             label_node = va_arg(args, labelNode *);
-            if(label_node != NULL){
+            if (label_node != NULL) {
                 free(label_node);
             }
         }
-        if(*ptr == 'i'){
+        if (*ptr == 'i') {
             instruction = va_arg(args, instrParts *);
-            if(instruction != NULL)
-                free(instruction);
+            if (instruction != NULL)
+                free_structs(instruction, NULL);
         }
-        if(*ptr == 'n'){
-            numbers = va_arg(args, int *);
-            if(numbers != NULL)
-                free(numbers);
-        }
-        if(*ptr == 'c'){
+        if (*ptr == 'c') {
             command = va_arg(args, commandParts *);
-            if(command != NULL)
-                free(command);
+            if (command != NULL)
+                free_structs(NULL, command);
+        }
+        if (*ptr == 'a') {
+            numbers = va_arg(args, int *);
+            if (numbers != NULL)
+                free(numbers);
         }
     }
 
     va_end(args);
 }
 
-bool check_multiple_commas(char * input){
-    char * ptr = NULL;
-    char * cpy = NULL;
+int check_multiple_commas(char *input) {
+    char *ptr = NULL;
+    char *cpy = NULL;
 
-    if(input == NULL)
+    if (input == NULL)
         return false;
 
     cpy = strdupli(input);
-    if(cpy == NULL){
-        generate_error(ERROR_MALLOC_FAILED,-1, "");
+    if (cpy == NULL) {
+        generate_error(ERROR_MALLOC_FAILED, -1, "");
         return false;
-    }
-    else{
+    } else {
         ptr = cpy;
-        while(*ptr != '\0'){
-            if(*ptr == ','){
+        while (*ptr != '\0') {
+            if (*ptr == ',') {
                 ptr++;
-                if(*ptr == ','){
-                    cleanup("s",cpy);
-                    return true;
+                if (*ptr == ',') {
+                    cleanup("s", cpy);
+                    return ERROR_MULTIPLE_COMMAS;
                 }
-            }
-            else
+            } else
                 ptr++;
         }
     }
-    cleanup("s",cpy);
-    return false;
+    cleanup("s", cpy);
+    return NO_ERROR;
 
 }
 
-bool check_invalid_parentheses(char * input){
+bool check_invalid_parentheses(char *input) {
     int count = 0;
 
     /* Iterating and counting the amount if " in the string */
-    while(*input != '\0'){
-        if(*input == '"')
+    while (*input != '\0') {
+        if (*input == '"')
             count++;
         input++;
     }
@@ -303,15 +304,72 @@ bool check_invalid_parentheses(char * input){
 }
 
 
-bool is_whole_number(char * number){
+bool is_whole_number(char *number) {
 
     if (*number == '+' || *number == '-')
         number++;
 
-    while(*number != '\0'){
-        if(isdigit(*number) == 0)
+    while (*number != '\0') {
+        if (isdigit(*number) == 0)
             return false;
         number++;
     }
     return true;
 }
+
+codeWord encode_instruction(int input) {
+    codeWord code;
+    init_code_word(&code);
+    convert_to_binary(input, &code);
+    return code;
+}
+
+void convert_to_binary(int input, codeWord *code) {
+    int i;
+    for (i = 0; i < SIZE_OF_WORD; i++) {
+        if (input & (1 << i))
+            code->bits[i / 8] |= (1 << (i % 8));
+    }
+
+}
+
+int convert_binary_to_octal(codeWord code) {
+    int dec = 0,dec_mult = 1;
+    int oct = 0, oct_mult = 1;
+    int i;
+    int bit;
+
+    /* Convert binary to decimal */
+    for (i = 0; i < SIZE_OF_WORD; i++) {
+        bit = code.bits[i / 8] & (1 << (i % 8));
+        if(bit)
+            dec += dec_mult;
+        dec_mult *= 2;
+    }
+
+    /* Convert decimal to octal */
+    while(dec > 0){
+        oct += (dec % 8) * oct_mult;
+        dec /= 8;
+        oct_mult *= 10;
+    }
+    return oct;
+}
+
+int check_commas_at_start_end(char * line){
+    if(line == NULL)
+        return NO_ERROR;
+    if((line[0] == ',') || (line[strlen(line)-1] == ','))
+        return ERROR_INVALID_COMMA;
+    return NO_ERROR;
+}
+
+int validate_commas_format(char * line){
+    int error = NO_ERROR;
+    if((error = check_commas_at_start_end(line)) != NO_ERROR)
+        return error;
+    if((error = check_multiple_commas(line)) != NO_ERROR)
+        return error;
+    return error;
+}
+

@@ -111,30 +111,18 @@ construct_instruction(char *line, Node **macro_head, Node **label_head, int line
     }
     init_struct_parts(instruction, NULL);
 
-    label_name = line_is_label_decl(line);
-    if (label_name != NULL) {
-        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC);
-        if (temp == NULL) {
-            cleanup("si", label_name, instruction);
-            return NULL;
-        } else {
-            instruction->label = temp;
-        }
-
-    }
-
     /* Handling data instruction */
     if (strstr(line, ".data") != NULL) {
         instruction->type = DATA;
         cpy = strdupli(line);
         numbers = get_data(cpy, line_number, &num_of_numbers);
         if (numbers == NULL) {
-            cleanup("iss", instruction, cpy, label_name);
+            cleanup("is", instruction, cpy);
             return NULL;
         }
         instruction->data.numbers = numbers;
         instruction->length.amount_of_numbers = num_of_numbers;
-        cleanup("ss", label_name, cpy);
+        cleanup("s", cpy);
 
 
         /* Handling string instruction */
@@ -147,15 +135,25 @@ construct_instruction(char *line, Node **macro_head, Node **label_head, int line
             ((string = get_string(raw_string)) == NULL)) {
             generate_error(ERROR_INVALID_STRING_FORMAT, line_number, line);
             free_list(label_head, LABEL, ALL);
-            cleanup("iss", instruction, label_name, ptr);
+            cleanup("is", instruction, ptr);
             return NULL;
         }
         instruction->data.string = string;
         instruction->length.string_length = strlen(string) + 1;
-        cleanup("ss", label_name, ptr);
+        cleanup("s", ptr);
     }
 
+    label_name = line_is_label_decl(line);
+    if (label_name != NULL) {
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC);
+        if (temp == NULL) {
+            cleanup("si", label_name, instruction);
+            return NULL;
+        }
+    }
 
+    instruction->label = temp;
+    cleanup("s", label_name);
     return instruction;
 
 
@@ -184,6 +182,63 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
         generate_error(ERROR_MALLOC_FAILED, -1, "");
         return NULL;
     }
+
+    init_struct_parts(NULL, command);
+
+    /* If there is a label declaration */
+    if ((ptr = strchr(cpy, ':')) != NULL) {
+        ptr++;
+        ptr = strdupli(ptr);
+        remove_leading_spaces(ptr);
+        if (ptr == NULL || *ptr == '\0') {
+            generate_error(ERROR_LABEL_EMPTY_DECL, line_number, line);
+            cleanup("ssc", cpy, ptr, command);
+            return NULL;
+        }
+        op_name = strdupli(strtok(ptr, " "));
+        remaining = strdupli(strtok(NULL, "\n"));
+        cleanup("s", ptr);
+
+    } else {
+        op_name = strdupli(strtok(cpy, " "));
+        remaining = strdupli(strtok(NULL, "\n"));
+    }
+
+
+    if (op_name != NULL) {
+        remove_leading_spaces(op_name);
+        remove_trailing_spaces(op_name);
+
+        /* Validating commas */
+        error = validate_commas_format(op_name);
+        if (error == NO_ERROR)
+            error = validate_commas_format(remaining);
+        if (error != NO_ERROR) {
+            generate_error(error, line_number, line);
+            cleanup("sscs", cpy, op_name, command, remaining);
+            return NULL;
+        }
+        
+        /* Checking if the name is a known op name */
+        if ((op_code = is_name_op_name(op_name)) == -1) {
+            generate_error(ERROR_UNKNOWN_OP_NAME, line_number, line);
+            cleanup("scs", op_name, command, remaining);
+            return NULL;
+        }
+    }
+
+
+    command->op_code = op_code;
+    /* Get the arguments */
+    if ((error = handle_arguments(remaining, command, macro_head)) != NO_ERROR) {
+        generate_error(error, line_number, line);
+        cleanup("sscs", cpy, op_name, command, remaining);
+        return NULL;
+    }
+
+
+    /* TODO: Store all the information inside the command and return it*/
+
     label_name = line_is_label_decl(cpy);
     if (label_name != NULL) {
         temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC);
@@ -192,47 +247,8 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
             return NULL;
         }
     }
-    init_struct_parts(NULL, command);
+
     command->label = temp;
-    /* There is a label declaration in the line */
-    if (temp != NULL) {
-        ptr = strchr(cpy, ':');
-        ptr++;
-        ptr = strdupli(ptr);
-        remove_leading_spaces(ptr);
-        if (ptr == NULL || *ptr == '\0') {
-            generate_error(ERROR_LABEL_EMPTY_DECL, line_number, line);
-            cleanup("sssc", label_name, cpy, ptr, command);
-            return NULL;
-        }
-        op_name = strdupli(strtok(ptr, " "));
-        remaining = strdupli(strtok(NULL, "\n"));
-        cleanup("s", ptr);
-    } else {
-        op_name = strdupli(strtok(cpy, " "));
-        remaining = strdupli(strtok(NULL, "\n"));
-    }
-    if (op_name != NULL) {
-        remove_leading_spaces(op_name);
-        remove_trailing_spaces(op_name);
-        /* Checking if the name is a known op name */
-        if ((op_code = is_name_op_name(op_name)) == -1) {
-            generate_error(ERROR_UNKNOWN_OP_NAME, line_number, line);
-            cleanup("sscs", label_name, op_name, command, remaining);
-            return NULL;
-        }
-    }
-    command->op_code = op_code;
-    /* Get the arguments */
-    if ((error = handle_arguments(remaining, command)) != NO_ERROR) {
-        generate_error(error, line_number, line);
-    }
-
-
-    /* TODO: Store all the information inside the command and return it*/
-
-
-
     cleanup("ssss", remaining, op_name, cpy, label_name);
 
 
@@ -253,7 +269,8 @@ char *line_is_label_decl(char *line) {
     return token;
 }
 
-int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type) {
+int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type,
+                        unsigned short memory_counter, int *replace_flag) {
     Node *temp = NULL;
     labelNode *found = NULL;
 
@@ -268,6 +285,8 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
     }
     if ((temp = search_node(*label_head, label_name, LABEL)) != NULL) {
         found = (labelNode *) temp->data;
+        printf("LABEL: %s\n", found->label_name);
+        printf("MEMORY: %d\n", found->address);
         /* Already existing label */
         if (found->label_type == LOCAL && type == LOCAL)
             return ERROR_LABEL_ALREADY_EXISTS;
@@ -277,9 +296,19 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
         /* An attempt to declare an extern label as local */
         if (found->label_type == EXTERN && type == LOCAL)
             return ERROR_EXTERN_AS_LOCAL;
-
+        /* An attempt to declare extern as entry or vise versa */
         if ((found->label_type == EXTERN && type == ENTRY) || (found->label_type == ENTRY && type == EXTERN))
             return ERROR_EXTERN_ENTRY;
+        /* Updating the memory location of an entry label after it declaration */
+        if (found->label_type == ENTRY && type == LOCAL) {
+            found->address = memory_counter;
+            *replace_flag = ENTRY_TO_LOCAL;
+        }
+        if (found->label_type == LOCAL && type == ENTRY) {
+            found->label_type = ENTRY;
+            *replace_flag = LOCAL_TO_ENTRY;
+        }
+
     }
     return NO_ERROR;
 
@@ -289,25 +318,30 @@ Node *
 handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
                   unsigned short memory_counter) {
     int error = NO_ERROR;
+    int replace_flag = -1;
     labelNode *label_node = NULL;
     Node *temp = NULL;
 
-    if ((error = validate_label_decl(label_name, macro_head, label_head, type)) != NO_ERROR) {
+    if ((error = validate_label_decl(label_name, macro_head, label_head, type, memory_counter, &replace_flag)) !=
+        NO_ERROR) {
         generate_error(error, line_number, line);
         return NULL;
     }
-    label_node = create_label_node(label_name, memory_counter, type);
-    if (label_node == NULL) {
-        generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
-        return NULL;
+    if (replace_flag != ENTRY_TO_LOCAL && replace_flag != LOCAL_TO_ENTRY) {
+        label_node = create_label_node(label_name, memory_counter, type);
+        if (label_node == NULL) {
+            generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
+            return NULL;
+        }
+        temp = create_node(label_node, sizeof(labelNode), LABEL);
+        cleanup("l", label_node);
+        if (temp != NULL) {
+            add_node(label_head, temp);
+            return temp;
+        } else
+            return NULL;
     }
-    temp = create_node(label_node, sizeof(labelNode), LABEL);
-    cleanup("l", label_node);
-    if (temp != NULL) {
-        add_node(label_head, temp);
-        return temp;
-    } else
-        return NULL;
+    return NULL;
 
 }
 
@@ -361,6 +395,7 @@ int *get_data(char *line, int line_number, short *num_of_numbers) {
     char *cpy = NULL;
     int *numbers = NULL;
     char *keyword = ".data";
+    int error = NO_ERROR;
 
     cpy = strdupli(line);
     ptr = strstr(cpy, ".data");
@@ -375,24 +410,9 @@ int *get_data(char *line, int line_number, short *num_of_numbers) {
         cleanup("s", cpy);
         return NULL;
     }
-
-    /* There is a comma before the first number */
-    if (ptr[0] == ',') {
-        generate_error(ERROR_COMMA_AT_START, line_number, line);
-        cleanup("s", cpy);
-        return NULL;
-    }
-
-    /* There is a comma after the last number */
-    if (ptr[strlen(ptr) - 1] == ',') {
-        generate_error(ERROR_COMMA_AT_END, line_number, line);
-        cleanup("s", cpy);
-        return NULL;
-    }
-
-    /* There is multiple commas in a row */
-    if (check_multiple_commas(cpy) == true) {
-        generate_error(ERROR_MULTIPLE_COMMAS, line_number, line);
+    /* Validating the commas */
+    if ((error = validate_commas_format(cpy)) != NO_ERROR) {
+        generate_error(error, line_number, line);
         cleanup("s", cpy);
         return NULL;
     }
@@ -438,7 +458,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
             }
             number = atoi(token);
             if (number > BITS_15_MAX_NUMBER || number < BITS_15_MIN_NUMBER) {
-                cleanup("n", numbers);
+                cleanup("a", numbers);
                 generate_error(ERROR_DATA_INVALID_INPUT, line_number, line);
                 return NULL;
             } else {
@@ -447,7 +467,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
             }
 
         } else {
-            cleanup("n", numbers);
+            cleanup("a", numbers);
             generate_error(ERROR_DATA_INVALID_INPUT, line_number, line);
             return NULL;
         }
@@ -459,24 +479,26 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
 
 }
 
-int handle_arguments(char *arguments, commandParts *command) {
+int handle_arguments(char *arguments, commandParts *command, Node **macro_head) {
     int op_code = command->op_code;
     char *token = NULL;
     int number_of_arguments;
     int error = NO_ERROR;
 
-
     /* Count the amount of arguments. */
     number_of_arguments = count_arguments(arguments, &error);
+
     /* In case an error not related to the amount of arguments has occurred. */
     if (error != NO_ERROR)
         return error;
+
     if (number_of_arguments != op_mappings[op_code].n_args) {
         error = ERROR_INVALID_AMOUNT_OF_ARGUMENTS;
         return error;
     }
+
     /* Validate the arguments, content and store them if needed */
-    if ((error = validate_store_arguments(arguments, command, number_of_arguments)) != NO_ERROR) {
+    if ((error = validate_store_arguments(arguments, command, number_of_arguments, macro_head)) != NO_ERROR) {
         return error;
     }
 
@@ -502,7 +524,9 @@ int count_arguments(char *arguments, int *error) {
     cpy = strdupli(arguments);
     if (cpy == NULL)
         return ERROR_MALLOC_FAILED;
+
     clean_input = remove_spaces(cpy);
+
     if (clean_input == NULL) {
         cleanup("s", cpy);
         *error = ERROR_MALLOC_FAILED;
@@ -513,7 +537,9 @@ int count_arguments(char *arguments, int *error) {
         cleanup("ss", cpy, clean_input);
         return count;
     }
+
     token = strtok(clean_input, ",");
+
     while (token != NULL) {
         count++;
         token = strtok(NULL, ",");
@@ -522,13 +548,16 @@ int count_arguments(char *arguments, int *error) {
     return count;
 }
 
-int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments) {
+int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments, Node **macro_head) {
+    char *arg1 = NULL;
+    char *arg2 = NULL;
     char *token = NULL;
     char *cpy = NULL;
     int op_code = command->op_code;
     int src_address_mode;
     int dst_address_mode;
-    int error = NO_ERROR;
+    int error_src = NO_ERROR;
+    int error_dst = NO_ERROR;
 
     /* No arguments needed to be checked */
     if (number_of_arguments == 0)
@@ -542,12 +571,11 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
     remove_trailing_spaces(cpy);
 
     if (number_of_arguments == 1) {
-        dst_address_mode = get_address_mode(cpy, &error);
-        cleanup("s", cpy);
-        if (error != NO_ERROR) {
-            return error;
-        }
-        else if (dst_address_mode == NOT_LEGAL) {
+        dst_address_mode = get_address_mode(cpy, &error_dst, macro_head);
+        if (error_dst != NO_ERROR) {
+            return error_dst;
+
+        } else if (dst_address_mode == NOT_LEGAL) {
             return ERROR_INVALID_INPUT;
         }
             /* Checking if the address mode that was found is valid according to the opcode mapping */
@@ -557,20 +585,76 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
             /* Storing the argument*/
         else {
             command->dst_mode = dst_address_mode;
-            command->dst = arguments;
+            command->dst = cpy;
+            /*
             printf("MODE: %d\n", dst_address_mode);
-            printf("ARG: '%s'\n", arguments);
+            printf("ARG: '%s'\n", cpy);
+             */
         }
+
     } else if (number_of_arguments == 2) {
-        printf("2: %s\n", cpy);
+        token = strdupli(cpy);
         cleanup("s", cpy);
+        if (token == NULL)
+            return ERROR_MALLOC_FAILED;
+
+        arg1 = strtok(token, ",");
+        arg2 = strtok(NULL, ",");
+        src_address_mode = get_address_mode(arg1, &error_src, macro_head);
+        dst_address_mode = get_address_mode(arg2, &error_dst, macro_head);
+
+        /* Error found */
+        if (error_src != NO_ERROR || error_dst != NO_ERROR) {
+            cleanup("s", token);
+            if (error_src != NO_ERROR)
+                return error_src;
+            return error_dst;
+        }
+
+        /* Address code not legal */
+        if (src_address_mode == NOT_LEGAL || dst_address_mode == NOT_LEGAL) {
+            cleanup("s", token);
+            return ERROR_INVALID_INPUT;
+        }
+
+        /* Address code doesn't match the allowed address codes for the given opcode */
+        if ((op_mappings[op_code].src_mode[src_address_mode] != 1) ||
+            (op_mappings[op_code].dst_mode[dst_address_mode] != 1)) {
+            cleanup("s", token);
+            return ERROR_INVALID_ADDRESS_MODE;
+        } else {
+            /* Removing spaces */
+            remove_leading_spaces(arg1);
+            remove_trailing_spaces(arg1);
+            remove_leading_spaces(arg2);
+            remove_trailing_spaces(arg2);
+
+            command->src_mode = src_address_mode;
+            command->src = strdupli(arg1);
+            command->dst_mode = dst_address_mode;
+            command->dst = strdupli(arg2);
+
+            /* Checking if both address modes are registers in order to encode them with 1 word later. */
+            if ((src_address_mode == INDIRECT_REG || src_address_mode == DIRECT_REG) &&
+                (dst_address_mode == INDIRECT_REG || dst_address_mode == DIRECT_REG))
+                command->both_registers = true;
+
+            /*
+            printf("MODE1: %d\n", src_address_mode);
+            printf("ARG1: '%s'\n", arg1);
+            printf("MODE2: %d\n", dst_address_mode);
+            printf("ARG2: '%s'\n", arg2);
+             */
+
+            cleanup("s", token);
+        }
     }
 
 
-    return error;
+    return NO_ERROR;
 }
 
-int get_address_mode(char *argument, int *error) {
+int get_address_mode(char *argument, int *error, Node **macro_head) {
     char *ptr = NULL;
     char *temp = NULL;
 
@@ -585,21 +669,20 @@ int get_address_mode(char *argument, int *error) {
         }
         /* Moving the pointer to the next character */
         ptr++;
-        /* TODO: maybe check space here? if its legal */
         remove_trailing_spaces(ptr);
         if (is_whole_number(ptr) == false) {
             *error = ERROR_IMID_MODE_INVALID_INPUT;
         }
 
         cleanup("s", temp);
-        if(*error != NO_ERROR)
+        if (*error != NO_ERROR)
             return NOT_LEGAL;
         else
             return IMMEDIATE;
 
     }
 
-        /* Direct */
+        /* Indirect register */
     else if ((ptr = strchr(argument, '*')) != NULL) {
         ptr = strdupli(ptr);
         if (ptr == NULL) {
@@ -616,23 +699,45 @@ int get_address_mode(char *argument, int *error) {
         if (strlen(ptr) != 2) {
             *error = ERROR_IND_REG_INVALID;
         }
-        cleanup("s",temp);
-        if(*error != NO_ERROR){
+        cleanup("s", temp);
+        if (*error != NO_ERROR) {
             return NOT_LEGAL;
-        }
-        else{
+        } else {
             return INDIRECT_REG;
         }
 
     }
 
-    /* Indirect register */
+        /* Direct reg */
+    else if (strchr(argument, 'r') != NULL) {
+        ptr = strdupli(argument);
+        remove_leading_spaces(ptr);
+        remove_trailing_spaces(ptr);
+        if (is_name_register(ptr) == false)
+            *error = ERROR_UNKNOWN_REGISTER;
+        cleanup("s", ptr);
+        if (*error != NO_ERROR)
+            return NOT_LEGAL;
+        else
+            return DIRECT_REG;
+    }
+        /* Direct */
+    else {
+        ptr = strdupli(argument);
+        remove_leading_spaces(ptr);
+        remove_trailing_spaces(ptr);
+        if (is_name_legal(ptr) == false || is_name_alphanumeric(ptr) == false ||
+            search_node(*macro_head, ptr, MACRO) != NULL) {
+            *error = ERROR_ILLEGAL_LABEL_NAME;
+        }
+        cleanup("s", ptr);
+        if (*error != NO_ERROR)
+            return NOT_LEGAL;
+        else
+            return DIRECT;
+    }
 
 
-    /* Direct reg */
-
-
-    return NOT_LEGAL;
 }
 
 

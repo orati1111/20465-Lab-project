@@ -93,6 +93,7 @@ typedef struct command {
     char *src;
     addressMode dst_mode;
     char *dst;
+    bool both_registers;
 } commandParts;
 
 
@@ -176,6 +177,13 @@ void print_bits(codeWord word);
  * @param cptr - Pointer to the commandParts struct.
  */
 void init_struct_parts(instrParts * iptr, commandParts * cptr);
+
+/*
+ * Function that frees a given struct and its components.
+ * @param iptr - Pointer to the instrParts struct.
+ * @param cptr - Pointer to the commandParts struct.
+ */
+void free_structs(instrParts *iptr, commandParts * cptr);
 
 
 #endif
