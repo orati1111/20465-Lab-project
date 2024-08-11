@@ -8,14 +8,17 @@
 #include "errors.h"
 #include "data_structures.h"
 #include "lexer.h"
+#include "encode.h"
 
 
-bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
+bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, codeWord memory[MAX_MEMORY_SIZE],
+                      Node **unknown_label_head) {
     char buffer[BUFFER_SIZE];
     char cpy[MAX_CHAR_IN_LINE];
-    codeWord *memory[MAX_MEMORY_SIZE];
+    int memory_length = MAX_MEMORY_SIZE - 1;
+    int memory_ic_index = 0;
+    int memory_dc_index = memory_length;
     codeWord code;
-    int test;
     char *am_file = NULL;
 
     int i;
@@ -41,9 +44,12 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
     cleanup("s", am_file);
     fseek(fp_am, 0, SEEK_SET);
 
+    /* Initializing memory */
+    init_memory(memory);
+
     /* Read the file content */
     /* MAX_MEMORY_SIZE - OFFSET -> The memory size minus the 100 spaces that are not allowed to be used at the start */
-    while ((fgets(buffer, BUFFER_SIZE, fp_am) != NULL) && ( IC+DC < MAX_MEMORY_SIZE - OFFSET )) {
+    while ((fgets(buffer, BUFFER_SIZE, fp_am) != NULL) && (IC + DC < MAX_MEMORY_SIZE - OFFSET)) {
         line_number++;
         buffer[strlen(buffer)] = '\0';
         /* Checking if the line is too long */
@@ -69,33 +75,13 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
             if (strstr(cpy, ".entry") != NULL || strstr(cpy, ".extern") != NULL) {
                 construct_extern_entry(cpy, macro_head, label_head, line_number, &num_of_entries, &num_of_externs);
                 /* TODO: probably do something here */
-            }
-            else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
+            } else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
                 instruction = construct_instruction(cpy, macro_head, label_head, line_number, DC);
                 if (instruction == NULL) {
                     no_error = false;
                 } else {
-                    /* TODO: encode the data inside the memory, increase DC */
-                    /* TODO: delete this */
-
-                    if (instruction->type == DATA) {
-
-                        /* encoding the numbers*/
-                        for(i=0;i<instruction->length.amount_of_numbers;i++){
-                            code = encode_instruction(instruction->data.numbers[i]);
-                        }
-                        DC += instruction->length.amount_of_numbers;
-                        cleanup("i",instruction);
-
-                    } else if (instruction->type == STRING) {
-
-                        /* encoding the string letters*/
-                        for(i=0;i<instruction->length.string_length;i++){
-                            code = encode_instruction(instruction->data.string[i]);
-                        }
-                        DC += instruction->length.string_length;
-                        cleanup("i", instruction);
-                    }
+                    encode_instruction(instruction, memory, &memory_dc_index, &DC);
+                    cleanup("i", instruction);
                 }
 
             }
@@ -108,14 +94,21 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head) {
         else {
             command = construct_command(cpy, macro_head, label_head, line_number, IC);
             if (command != NULL) {
-                /* TODO: remove */
+                encode_command(command, memory, &memory_ic_index, &IC, label_head, unknown_label_head,cpy,line_number);
                 cleanup("c", command);
             }
         }
+//        print_label_list(*label_head);
     }
     fclose(fp_am);
     free_list(macro_head, MACRO, ALL);
     free_list(label_head, LABEL, ALL);
+//    for (i = memory_length; i >= memory_dc_index - 2; i--) {
+//        printf("%d: ", convert_binary_to_octal(memory[i]));
+//        print_bits(memory[i]);
+//
+//
+//    }
 
 
     return no_error;

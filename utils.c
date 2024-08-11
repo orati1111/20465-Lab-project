@@ -206,10 +206,6 @@ bool check_extra_text(char *ptr, char *string) {
     return *ptr != '\0';
 }
 
-void set_opcode_binary(codeWord *word, char opcode) {
-    word->bits[1] |= (opcode << 3);
-}
-
 
 void cleanup(const char *order, ...) {
     va_list args;
@@ -217,7 +213,6 @@ void cleanup(const char *order, ...) {
     int *numbers;
     FILE *fp = NULL;
     labelNode *label_node = NULL;
-    Node * node;
     instrParts *instruction = NULL;
     commandParts *command = NULL;
     const char *ptr = NULL;
@@ -267,7 +262,7 @@ int check_multiple_commas(char *input) {
     char *cpy = NULL;
 
     if (input == NULL)
-        return false;
+        return NO_ERROR;
 
     cpy = strdupli(input);
     if (cpy == NULL) {
@@ -317,24 +312,21 @@ bool is_whole_number(char *number) {
     return true;
 }
 
-codeWord encode_instruction(int input) {
-    codeWord code;
-    init_code_word(&code);
-    convert_to_binary(input, &code);
-    return code;
-}
 
-void convert_to_binary(int input, codeWord *code) {
+void convert_to_binary(int input, codeWord *code, bool full_word) {
     int i;
-    for (i = 0; i < SIZE_OF_WORD; i++) {
-        if (input & (1 << i))
+    int start_bit = 0, end_bit = SIZE_OF_WORD;
+    if(full_word == false)
+        start_bit = 3;
+    for (i = start_bit; i < end_bit; i++) {
+        if (input & (1 << (i-start_bit)))
             code->bits[i / 8] |= (1 << (i % 8));
     }
 
 }
 
 int convert_binary_to_octal(codeWord code) {
-    int dec = 0,dec_mult = 1;
+    int dec = 0, dec_mult = 1;
     int oct = 0, oct_mult = 1;
     int i;
     int bit;
@@ -342,13 +334,13 @@ int convert_binary_to_octal(codeWord code) {
     /* Convert binary to decimal */
     for (i = 0; i < SIZE_OF_WORD; i++) {
         bit = code.bits[i / 8] & (1 << (i % 8));
-        if(bit)
+        if (bit)
             dec += dec_mult;
         dec_mult *= 2;
     }
 
     /* Convert decimal to octal */
-    while(dec > 0){
+    while (dec > 0) {
         oct += (dec % 8) * oct_mult;
         dec /= 8;
         oct_mult *= 10;
@@ -356,20 +348,28 @@ int convert_binary_to_octal(codeWord code) {
     return oct;
 }
 
-int check_commas_at_start_end(char * line){
-    if(line == NULL)
+int check_commas_at_start_end(char *line) {
+    if (line == NULL)
         return NO_ERROR;
-    if((line[0] == ',') || (line[strlen(line)-1] == ','))
+    if ((line[0] == ',') || (line[strlen(line) - 1] == ','))
         return ERROR_INVALID_COMMA;
     return NO_ERROR;
 }
 
-int validate_commas_format(char * line){
+int validate_commas_format(char *line) {
     int error = NO_ERROR;
-    if((error = check_commas_at_start_end(line)) != NO_ERROR)
+    if ((error = check_commas_at_start_end(line)) != NO_ERROR)
         return error;
-    if((error = check_multiple_commas(line)) != NO_ERROR)
+    if ((error = check_multiple_commas(line)) != NO_ERROR)
         return error;
     return error;
 }
+
+codeWord bitwise_or_codes(codeWord code1, codeWord code2) {
+
+}
+
+
+
+
 

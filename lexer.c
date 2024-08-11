@@ -73,7 +73,7 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
     }
 
     /* Handling the label declaration */
-    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0);
+    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0,false);
     if (temp == NULL) {
         cleanup("s", cpy);
         return false;
@@ -134,7 +134,6 @@ construct_instruction(char *line, Node **macro_head, Node **label_head, int line
         if (strchr(raw_string, '"') == NULL || check_invalid_parentheses(raw_string) ||
             ((string = get_string(raw_string)) == NULL)) {
             generate_error(ERROR_INVALID_STRING_FORMAT, line_number, line);
-            free_list(label_head, LABEL, ALL);
             cleanup("is", instruction, ptr);
             return NULL;
         }
@@ -145,7 +144,7 @@ construct_instruction(char *line, Node **macro_head, Node **label_head, int line
 
     label_name = line_is_label_decl(line);
     if (label_name != NULL) {
-        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC);
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC, false);
         if (temp == NULL) {
             cleanup("si", label_name, instruction);
             return NULL;
@@ -218,11 +217,11 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
             cleanup("sscs", cpy, op_name, command, remaining);
             return NULL;
         }
-        
+
         /* Checking if the name is a known op name */
         if ((op_code = is_name_op_name(op_name)) == -1) {
             generate_error(ERROR_UNKNOWN_OP_NAME, line_number, line);
-            cleanup("scs", op_name, command, remaining);
+            cleanup("scss", op_name, command, remaining, cpy);
             return NULL;
         }
     }
@@ -237,20 +236,17 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
     }
 
 
-    /* TODO: Store all the information inside the command and return it*/
-
     label_name = line_is_label_decl(cpy);
     if (label_name != NULL) {
-        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC);
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC, true);
         if (temp == NULL) {
-            cleanup("ssc", cpy, label_name, command);
+            cleanup("sscss", cpy, label_name, command, remaining, op_name);
             return NULL;
         }
     }
 
     command->label = temp;
     cleanup("ssss", remaining, op_name, cpy, label_name);
-
 
     return command;
 }
@@ -270,7 +266,7 @@ char *line_is_label_decl(char *line) {
 }
 
 int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type,
-                        unsigned short memory_counter, int *replace_flag) {
+                        unsigned short memory_counter, int *replace_flag, Node **ptr, bool is_label_command) {
     Node *temp = NULL;
     labelNode *found = NULL;
 
@@ -285,8 +281,6 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
     }
     if ((temp = search_node(*label_head, label_name, LABEL)) != NULL) {
         found = (labelNode *) temp->data;
-        printf("LABEL: %s\n", found->label_name);
-        printf("MEMORY: %d\n", found->address);
         /* Already existing label */
         if (found->label_type == LOCAL && type == LOCAL)
             return ERROR_LABEL_ALREADY_EXISTS;
@@ -302,11 +296,14 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
         /* Updating the memory location of an entry label after it declaration */
         if (found->label_type == ENTRY && type == LOCAL) {
             found->address = memory_counter;
+            found->is_label_command = is_label_command;
             *replace_flag = ENTRY_TO_LOCAL;
+            *ptr = temp;
         }
         if (found->label_type == LOCAL && type == ENTRY) {
             found->label_type = ENTRY;
             *replace_flag = LOCAL_TO_ENTRY;
+            *ptr = temp;
         }
 
     }
@@ -316,19 +313,19 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
 
 Node *
 handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
-                  unsigned short memory_counter) {
+                  unsigned short memory_counter, bool is_label_command) {
     int error = NO_ERROR;
     int replace_flag = -1;
     labelNode *label_node = NULL;
     Node *temp = NULL;
 
-    if ((error = validate_label_decl(label_name, macro_head, label_head, type, memory_counter, &replace_flag)) !=
+    if ((error = validate_label_decl(label_name, macro_head, label_head, type, memory_counter, &replace_flag, &temp,is_label_command)) !=
         NO_ERROR) {
         generate_error(error, line_number, line);
         return NULL;
     }
     if (replace_flag != ENTRY_TO_LOCAL && replace_flag != LOCAL_TO_ENTRY) {
-        label_node = create_label_node(label_name, memory_counter, type);
+        label_node = create_label_node(label_name, memory_counter, type, is_label_command);
         if (label_node == NULL) {
             generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
             return NULL;
@@ -341,7 +338,7 @@ handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_
         } else
             return NULL;
     }
-    return NULL;
+    return temp;
 
 }
 
@@ -481,7 +478,6 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
 
 int handle_arguments(char *arguments, commandParts *command, Node **macro_head) {
     int op_code = command->op_code;
-    char *token = NULL;
     int number_of_arguments;
     int error = NO_ERROR;
 
@@ -502,11 +498,6 @@ int handle_arguments(char *arguments, commandParts *command, Node **macro_head) 
         return error;
     }
 
-
-    /* TODO: Look for address codes */
-    /* TODO: check arguments - register? label? number? */
-    /* TODO: label? if it doesnt exist , continue to look for it in the second pass */
-    /* TODO: label name is macro name? ERROR */
     /* Cases */
     return error;
 }
@@ -586,10 +577,6 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
         else {
             command->dst_mode = dst_address_mode;
             command->dst = cpy;
-            /*
-            printf("MODE: %d\n", dst_address_mode);
-            printf("ARG: '%s'\n", cpy);
-             */
         }
 
     } else if (number_of_arguments == 2) {
@@ -638,13 +625,6 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
             if ((src_address_mode == INDIRECT_REG || src_address_mode == DIRECT_REG) &&
                 (dst_address_mode == INDIRECT_REG || dst_address_mode == DIRECT_REG))
                 command->both_registers = true;
-
-            /*
-            printf("MODE1: %d\n", src_address_mode);
-            printf("ARG1: '%s'\n", arg1);
-            printf("MODE2: %d\n", dst_address_mode);
-            printf("ARG2: '%s'\n", arg2);
-             */
 
             cleanup("s", token);
         }

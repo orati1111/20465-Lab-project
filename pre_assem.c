@@ -132,7 +132,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
             /* Since we are duplicating the strings, they should be freed. */
             cleanup("ss",macro_name, macro_content);
             node = create_node(macro_node, sizeof(macroNode), MACRO);
-            free(macro_node); /* TODO: check here if it frees correctly */
+            free(macro_node);
             if (node != NULL) {
                 add_node(head, node);
             } else {
@@ -175,6 +175,7 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
                 cleanup("s",content);
                 return NULL;
             }
+            break;
         }
 
         /* Checking if there is a comment inside the macro, skipping it. */
@@ -201,8 +202,8 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
         if (temp == NULL)
             temp = content;
     }
+
     content[content_actual_size] = '\0';
-    fsetpos(fp, pos);
     return content;
 }
 

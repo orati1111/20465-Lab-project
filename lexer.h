@@ -16,8 +16,8 @@
  *  short src_mode[4] - Array that represents the allowed address modes for the source. for example [1,1,0,0] means only address modes 0 and 1 are allowed.
  *  short dst_mode[4] - Array that represents the allowed address modes for the destination.
  */
-typedef struct opMapping{
-    char * op_name;
+typedef struct opMapping {
+    char *op_name;
     short n_args;
     short src_mode[NUM_OF_ADDRESS_MODES];
     short dst_mode[NUM_OF_ADDRESS_MODES];
@@ -63,7 +63,7 @@ instrParts *construct_instruction(char *line, Node **macro_head, Node **label_he
  * @param IC - the command counter of the memory.
  * @return Pointer to the commandParts created, NULL otherwise.
  */
-commandParts * construct_command(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short IC);
+commandParts *construct_command(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short IC);
 
 /*
  * Function that checks if there is a label declaration in the line.
@@ -71,6 +71,7 @@ commandParts * construct_command(char *line, Node **macro_head, Node **label_hea
  * @return The name of the label, NULL otherwise.
  */
 char *line_is_label_decl(char *line);
+
 
 /*
  * Function that validates the legality of the label name.
@@ -82,9 +83,12 @@ char *line_is_label_decl(char *line);
  * @param replace_flag - Pointer to a flag that represents if a memory/type swap should occur
  * when an entry label exists and a declaration is found, replace the memory address.
  * when a local label exists and .entry was found, replace the label type.
+ * @param ptr - Double pointer to a Node to return if replace flag is enabled.
+ * @param is_label_command -  Flag to set if the label is a command.
  * @return NO_ERROR if the name is valid, error_number otherwise.
  */
-int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type, unsigned short memory_counter, int * replace_flag);
+int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type,
+                        unsigned short memory_counter, int *replace_flag, Node **ptr, bool is_label_command);
 
 /*
  * Function that handles the whole process of label declaration, validation and creation.
@@ -95,9 +99,12 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
  * @param type - The type of the label.
  * @param line_number - The number of the line.
  * @param memory_counter - The location in memory (DC or IC)
- * @param The node of the label, NULL otherwise.
+ * @param is_label_command - Flag to set if the label is a command.
+ * @return The node of the label, NULL otherwise.
  */
-Node * handle_label_decl(char * line, char *label_name, Node **macro_head, Node **label_head, labelType type , int line_number,unsigned short memory_counter);
+Node *
+handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
+                  unsigned short memory_counter, bool is_label_command);
 
 /*
  * Function that gets a .string argument and extracts the string.
@@ -113,7 +120,7 @@ char *get_string(const char *line);
  * @param num_of_numbers - Pointer to the number of numbers inside the array.
  * @return An array of the numbers, NULL otherwise.
  */
-int *get_data(char *line, int line_number, short * num_of_numbers);
+int *get_data(char *line, int line_number, short *num_of_numbers);
 
 /*
  * Function that gets the .data numbers, stores then inside an array and returns it.
@@ -122,7 +129,7 @@ int *get_data(char *line, int line_number, short * num_of_numbers);
  * @param line - The line itself.
  * @param num_of_numbers - A pointer to store the amount of numbers.
  */
-int * get_numbers(char * cpy, int line_number, char * line, short * num_of_numbers);
+int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers);
 
 /*
  * Function that gets a string , separates it to arguments and checks if they are valid.
@@ -131,7 +138,7 @@ int * get_numbers(char * cpy, int line_number, char * line, short * num_of_numbe
  * @param command - Pointer to the commandParts struct to store the information in.
  * @return Error number that represents an error that occurred during the function, NO_ERROR otherwise.
  */
-int handle_arguments(char * arguments, commandParts * command,Node **macro_head);
+int handle_arguments(char *arguments, commandParts *command, Node **macro_head);
 
 /*
  * Function that counts the amount of arguments in a given string.
@@ -150,7 +157,7 @@ int count_arguments(char *arguments, int *error);
  * @param number_of_arguments - The amount of arguments that should be.
  * @return NO_ERROR if it succeeded, error_number otherwise.
  */
-int validate_store_arguments(char * arguments, commandParts * command, int number_of_arguments, Node **macro_head);
+int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments, Node **macro_head);
 
 
 /*
@@ -160,6 +167,6 @@ int validate_store_arguments(char * arguments, commandParts * command, int numbe
  * @param macro_head - Double pointer to the head of the macro list.
  * @return The number of address_mode , error otherwise.
  */
-int get_address_mode(char * argument, int * error , Node **macro_head);
+int get_address_mode(char *argument, int *error, Node **macro_head);
 
 #endif

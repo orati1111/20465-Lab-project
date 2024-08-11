@@ -41,4 +41,11 @@ typedef enum {
     CONTENT_ONLY,
     ALL
 } freeType;
+
+typedef enum {
+    A = 4,
+    R = 2,
+    E = 1
+} areField;
+
 #endif

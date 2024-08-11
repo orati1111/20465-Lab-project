@@ -43,7 +43,7 @@ macroNode *create_macro_node(char *macro_name, char *macro_content) {
     return temp;
 }
 
-labelNode *create_label_node(char * label_name, unsigned short address, labelType type){
+labelNode *create_label_node(char * label_name, unsigned short address, labelType type,bool is_label_command){
     labelNode *temp = NULL;
     temp = malloc(sizeof(labelNode));
     if(temp == NULL)
@@ -55,8 +55,11 @@ labelNode *create_label_node(char * label_name, unsigned short address, labelTyp
     }
     temp->address = address;
     temp->label_type = type;
+    temp->is_label_command = is_label_command;
     return temp;
 }
+
+/* TODO: create a unknown labels node and list */
 
 Node *search_node(Node *head, char *name, nodeType node_type) {
     Node *temp = head;
@@ -180,7 +183,8 @@ void print_label_list(Node *head) {
         label_node = (labelNode *) temp->data;
         printf("\nLabel Name: '%s'\n", label_node->label_name);
         printf("Label address: '%d'\n", label_node->address);
-        printf("Label type: '%d'", label_node->label_type);
+        printf("Label type: '%d'\n", label_node->label_type);
+        printf("Is command: '%d'",label_node->is_label_command);
         temp = temp->next;
     }
     printf("\n\n---END OF LIST---\n\n");
@@ -235,6 +239,13 @@ void free_structs(instrParts *iptr ,commandParts * cptr){
         if(cptr->dst != NULL)
             free(cptr->dst);
         free(cptr);
+    }
+}
+
+void init_memory(codeWord memory[MAX_MEMORY_SIZE]){
+    int i;
+    for(i=0;i<MAX_MEMORY_SIZE;i++){
+        init_code_word(&memory[i]);
     }
 }
 

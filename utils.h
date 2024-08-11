@@ -127,18 +127,6 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head);
  */
 bool check_extra_text(char *ptr, char *string);
 
-/*
- * Function that converts the operation code into binary and stores it inside the appropriate place
- * in the code_word.
- * @param word - Pointer to the code_word to set the bits in.
- * @param opcode - The operation code (char to be more efficient with memory).
- */
-void set_opcode_binary(codeWord *word, char opcode);
-
-/*
- * Function that converts integer to binary.
- * @param input - The input to convert.
- */
 
 /*
  * Function that frees all the given arguments using stdargs
@@ -168,20 +156,14 @@ bool check_invalid_parentheses(char *input);
  */
 bool is_whole_number(char *number);
 
-
-/*
- * Function that gets an instruction and encodes to bits.
- * @param instr - Pointer to the instruction struct to encode.
- * @param code - Pointer to the code to store the encoded instruction.
- */
-codeWord encode_instruction(int input);
-
 /*
  * Function that converts int input to binary and store them.
  * @param input - The number to convert to binary.
- * @code - Pointer to code ward to store the binary in.
+ * @param code - Pointer to code ward to store the binary in.
+ * @param full_word - Flag that represents of the whole 0-14 bits should be encoded (as in instruction numbers)
+ * or 3-14 only (as in immediate address_mode in command)
  */
-void convert_to_binary(int input, codeWord *code);
+void convert_to_binary(int input, codeWord *code, bool full_word);
 
 /*
  * Function that converts binary to base 8.
@@ -195,13 +177,22 @@ int convert_binary_to_octal(codeWord code);
  * @param line - The string to check
  * @return ERROR_INVALID_COMMA , NO_ERROR otherwise.
  */
-int check_commas_at_start_end(char * line);
+int check_commas_at_start_end(char *line);
 
 /*
  * Function that combines the check_commas_at_start_end and check_multiple_commas to one.
  * @param line - The string to check.
  * @return error_number according to the error found, NO_ERROR otherwise.
  */
-int validate_commas_format(char * line);
+int validate_commas_format(char *line);
+
+/*
+ * Function that gets 2 codeWords and returns a code that is BITWISE OR of the 2 codes.
+ * @param code1 - First codeWord.
+ * @param code2 - Second codeWord.
+ * @return The bitwise OR codeWord.
+ */
+codeWord bitwise_or_codes(codeWord code1, codeWord code2);
+
 
 #endif

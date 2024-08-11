@@ -32,12 +32,14 @@ typedef struct macro_node {
  * Struct that represents the label node.
  * char * label_name - The name of the label to store.
  * short address - The memory address of the label (starts at 100)
- * LabelType label_type - The type of the label.
+ * LabelType label_type - The type of the label - LOCAL, EXTERN, ENTRY.
+ * bool is_label_command - Flag that checks if a label is a command or instruction.
  */
 typedef struct label_node {
     char *label_name;
     unsigned short address;
     labelType label_type;
+    bool is_label_command;
 } labelNode;
 
 /*
@@ -98,6 +100,23 @@ typedef struct command {
 
 
 /*
+ * Struct that stores the labels that were unknown to the parser during the parsing of a line.
+ * If a label was given as an argument, it will get stored inside this struct
+ * char * label_name - The name of the unknown label.
+ * short * memory_index - The index in the memory array that the encoded address of the label should be after the second pass (Assuming no errors occurred).
+ * char * line - The line where the label was found inorder to generate an error it occurred.
+ * int line_number - The line number of the line.
+ * short IC - The counter in memory of the label.
+ */
+typedef struct unknown_label_node {
+    char *label_name;
+    short memory_index;
+    char *line;
+    int line_number;
+    short IC;
+} unknownLabelNode;
+
+/*
  * Function that creates the node of the linked list.
  * @param data - Pointer to the data of the node to create
  * @param size_of_data - The size of the data
@@ -119,9 +138,10 @@ macroNode *create_macro_node(char *macro_name, char *macro_content);
  * @param label_name - The name of the label.
  * @param address - The address in memory of the label.
  * @param type - The type of label (extern, entry etc.)
+ * @param is_label_command - Flag that checks if a label is a command or instruction.
  * @return Pointer to the created node.
  */
-labelNode *create_label_node(char *label_name, unsigned short address, labelType type);
+labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command);
 
 /*
  * Function that searches a node by its name.
@@ -176,14 +196,19 @@ void print_bits(codeWord word);
  * @param iptr - Pointer to the instrParts struct.
  * @param cptr - Pointer to the commandParts struct.
  */
-void init_struct_parts(instrParts * iptr, commandParts * cptr);
+void init_struct_parts(instrParts *iptr, commandParts *cptr);
 
 /*
  * Function that frees a given struct and its components.
  * @param iptr - Pointer to the instrParts struct.
  * @param cptr - Pointer to the commandParts struct.
  */
-void free_structs(instrParts *iptr, commandParts * cptr);
+void free_structs(instrParts *iptr, commandParts *cptr);
+
+/* Function that initializes the codes inside the memory to 0's
+ * memory - Pointer to the array of the memory.
+ */
+void init_memory(codeWord memory[]);
 
 
 #endif

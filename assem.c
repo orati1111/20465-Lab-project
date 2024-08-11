@@ -8,26 +8,35 @@
 
 
 int main(int argc, char *argv[]) {
-    char *raw_file_name= NULL;
-    Node *macro_head;
-    Node *label_head;
+    char *raw_file_name = NULL;
+    Node *macro_head = NULL;
+    Node *label_head = NULL;
+    codeWord memory[MAX_MEMORY_SIZE];
+    Node *unknown_labels_head = NULL;
+
+    /* TODO: add unknownLabels linked list here */
     int index = 1;
     /* Iterating through all the given files. */
     while (index < argc) {
         macro_head = NULL;
         label_head = NULL;
         raw_file_name = argv[index++];
+
         printf("\nPre Assembling file: %s\n", raw_file_name);
-        printf("In file: %s.as\n\n",raw_file_name);
+        printf("In file: %s.as\n\n", raw_file_name);
         /* In case there was an error while reading a file, continue. */
-        if (start_pre_assem(raw_file_name,&macro_head) == false) {
+        if (start_pre_assem(raw_file_name, &macro_head) == false) {
             continue;
         }
+
         printf("\nFirst Passing file: %s\n", raw_file_name);
-        printf("In file: %s.am\n\n",raw_file_name);
-        if (start_first_pass(raw_file_name,&macro_head,&label_head) == false) {
+        printf("In file: %s.am\n\n", raw_file_name);
+        if (start_first_pass(raw_file_name, &macro_head, &label_head, (codeWord *) &memory,&unknown_labels_head) == false) {
             continue;
         }
+
+        printf("\nStart Second Passing file : %s\n", raw_file_name);
+        printf("In file: %s.am\n\n", raw_file_name);
 
     }
     return 1;
