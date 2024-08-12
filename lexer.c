@@ -637,6 +637,7 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
 int get_address_mode(char *argument, int *error, Node **macro_head) {
     char *ptr = NULL;
     char *temp = NULL;
+    int number;
 
     /* Immediate */
     if ((ptr = strchr(argument, '#')) != NULL) {
@@ -650,7 +651,7 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
         /* Moving the pointer to the next character */
         ptr++;
         remove_trailing_spaces(ptr);
-        if (is_whole_number(ptr) == false) {
+        if (is_whole_number(ptr) == false || (atoi(ptr) > BITS_12_MAX_NUMBER  || atoi(ptr) < BITS_12_MIN_NUMBER)) {
             *error = ERROR_IMID_MODE_INVALID_INPUT;
         }
 
@@ -662,6 +663,8 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
 
     }
 
+    /* TODO: error where there is a 'r' inside the label */
+    /* TODO: r9 r8 is legal names */
         /* Indirect register */
     else if ((ptr = strchr(argument, '*')) != NULL) {
         ptr = strdupli(ptr);

@@ -106,7 +106,8 @@ enum {
 
 };
 
-/* Struct to define the error mapping
+/**
+ * Struct to define the error mapping
  * error_number - The number of the error.
  * error_message - The error itself.
  */
@@ -115,7 +116,7 @@ typedef struct errorMapping {
     char error_message[MAX_MSG_LENGTH];
 } errorMapping;
 
-/*
+/**
  * Function that generates the error.
  * @param error_number - The number of the error (defined at the top of the file).
  * @param line_number - The line number in which the error occurred (-1 if it wasn't line related.)

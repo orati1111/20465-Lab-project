@@ -9,7 +9,7 @@
 #include "data_structures.h"
 #include "utils.h"
 
-/*
+/**
  * Structure to map each operand with its op_code , number of arguments and allowed address modes
  *  char * op_name - The name of the operand.
  *  short n_args - The number of allowed arguments to a given operand.
@@ -23,14 +23,14 @@ typedef struct opMapping {
     short dst_mode[NUM_OF_ADDRESS_MODES];
 } opMapping;
 
-/*
+/**
  * Function that checks if a given line is a comment and should be ignored.
  * @param line - The line to check.
  * @return True if the line is a comment, false otherwise.
  */
 bool line_is_comment(char *line);
 
-/*
+/**
  * Function that constructs an entry/extern label node from a given line.
  * @param line - The line to check.
  * @param macro_head - Double pointer to the head of the macro list.
@@ -43,7 +43,7 @@ bool line_is_comment(char *line);
 bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number, int *num_of_entries,
                             int *num_of_externs);
 
-/*
+/**
  * Function that constructs an instruction from a given line.
  * @param line - The line to check.
  * @param macro_head - Double pointer to the head of the macro list.
@@ -54,7 +54,7 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
  */
 instrParts *construct_instruction(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short DC);
 
-/*
+/**
  * Function that constructs a command from a given line.
  * @param line - The line to check.
  * @param macro_head - Double pointer to the head of the macro list.
@@ -65,7 +65,7 @@ instrParts *construct_instruction(char *line, Node **macro_head, Node **label_he
  */
 commandParts *construct_command(char *line, Node **macro_head, Node **label_head, int line_number, unsigned short IC);
 
-/*
+/**
  * Function that checks if there is a label declaration in the line.
  * @param line - the line to check.
  * @return The name of the label, NULL otherwise.
@@ -73,7 +73,7 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
 char *line_is_label_decl(char *line);
 
 
-/*
+/**
  * Function that validates the legality of the label name.
  * @param label_name - The label_name to check.
  * @param macro_head - Double pointer to the head of the macro list.
@@ -90,7 +90,7 @@ char *line_is_label_decl(char *line);
 int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, labelType type,
                         unsigned short memory_counter, int *replace_flag, Node **ptr, bool is_label_command);
 
-/*
+/**
  * Function that handles the whole process of label declaration, validation and creation.
  * @param line - The line of the label declaration.
  * @param label_name - The name of the label.
@@ -106,14 +106,14 @@ Node *
 handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
                   unsigned short memory_counter, bool is_label_command);
 
-/*
+/**
  * Function that gets a .string argument and extracts the string.
  * @param line - The line to extract the argument from.
  * @return The argument, NULL otherwise.
  */
 char *get_string(const char *line);
 
-/*
+/**
  * Function that gets the .data string, validates it and returns the number array
  * @param line - The line to extract the argument from.
  * @param line_number - The line of the number in the file.
@@ -122,7 +122,7 @@ char *get_string(const char *line);
  */
 int *get_data(char *line, int line_number, short *num_of_numbers);
 
-/*
+/**
  * Function that gets the .data numbers, stores then inside an array and returns it.
  * @param cpy - The copy of the line to alter.
  * @param line_number - The line of the number in the file.
@@ -131,7 +131,7 @@ int *get_data(char *line, int line_number, short *num_of_numbers);
  */
 int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers);
 
-/*
+/**
  * Function that gets a string , separates it to arguments and checks if they are valid.
  * Validating the number of arguments, address modes according to the given op_code.
  * @param arguments - The string that contains the arguments (Could be NULL)
@@ -140,7 +140,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers);
  */
 int handle_arguments(char *arguments, commandParts *command, Node **macro_head);
 
-/*
+/**
  * Function that counts the amount of arguments in a given string.
  * If there is an error not related to the amount of arguments, set it to the error pointer.
  * @param arguments - The string of arguments.
@@ -149,7 +149,7 @@ int handle_arguments(char *arguments, commandParts *command, Node **macro_head);
  */
 int count_arguments(char *arguments, int *error);
 
-/*
+/**
  * Function that validates the arguments given based on the amount presented.
  * Validating the src and dst address codes, the content of the arguments, etc.
  * @param arguments - The string of arguments.
@@ -160,7 +160,7 @@ int count_arguments(char *arguments, int *error);
 int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments, Node **macro_head);
 
 
-/*
+/**
  * Function that gets an argument and checks to what address mode does it belong.
  * @param argument - The argument to check.
  * @param error - Pointer to the error.

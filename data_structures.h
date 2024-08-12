@@ -6,7 +6,7 @@
 
 #include "globals.h"
 
-/*
+/**
  * Struct that represents the node and its attributes:
  * void * data - A pointer to the data of the node (Macro node or Label node).
  * nodeType node_type - The type of the node (Macro or label)
@@ -18,7 +18,7 @@ typedef struct Node {
     struct Node *next;
 } Node;
 
-/*
+/**
  * Struct that represents the content of a macro node.
   * char * macr_name - The name of the macro.
  *  char * macr_content - The content inside the macro.
@@ -28,7 +28,7 @@ typedef struct macro_node {
     char *macr_content;
 } macroNode;
 
-/*
+/**
  * Struct that represents the label node.
  * char * label_name - The name of the label to store.
  * short address - The memory address of the label (starts at 100)
@@ -42,7 +42,24 @@ typedef struct label_node {
     bool is_label_command;
 } labelNode;
 
-/*
+/**
+ * Struct that stores the labels that were unknown to the parser during the parsing of a line.
+ * If a label was given as an argument, it will get stored inside this struct
+ * char * label_name - The name of the unknown label.
+ * short * memory_index - The index in the memory array that the encoded address of the label should be after the second pass (Assuming no errors occurred).
+ * char * line - The line where the label was found inorder to generate an error it occurred.
+ * int line_number - The line number of the line.
+ * short IC - The counter in memory of the label.
+ */
+typedef struct unknown_label_node {
+    char *label_name;
+    short memory_index;
+    char *line;
+    int line_number;
+    short IC;
+} unknownLabelNode;
+
+/**
  * Structure that represents the 16-bits of a word.
  * 0 - 2 bits - A,R,E Field.
  * 3 - 6 bits - Destination Operand.
@@ -54,7 +71,7 @@ typedef struct codeWord {
 } codeWord;
 
 
-/*
+/**
  * Structure that represents the parts of an instruction in the code.
  * Node *label - A pointer to the label node that stores the information about the node (if presented).
  * instrType *type - The type of the instruction (string or data).
@@ -78,7 +95,7 @@ typedef struct instr {
     } data;
 } instrParts;
 
-/*
+/**
  * Structure that represents the parts of a command in the code.
  * LabelNode *label - A pointer to the label node that stores the information about the node (if presented).
  * char *op_names - The operation name in the command.
@@ -99,24 +116,7 @@ typedef struct command {
 } commandParts;
 
 
-/*
- * Struct that stores the labels that were unknown to the parser during the parsing of a line.
- * If a label was given as an argument, it will get stored inside this struct
- * char * label_name - The name of the unknown label.
- * short * memory_index - The index in the memory array that the encoded address of the label should be after the second pass (Assuming no errors occurred).
- * char * line - The line where the label was found inorder to generate an error it occurred.
- * int line_number - The line number of the line.
- * short IC - The counter in memory of the label.
- */
-typedef struct unknown_label_node {
-    char *label_name;
-    short memory_index;
-    char *line;
-    int line_number;
-    short IC;
-} unknownLabelNode;
-
-/*
+/**
  * Function that creates the node of the linked list.
  * @param data - Pointer to the data of the node to create
  * @param size_of_data - The size of the data
@@ -133,7 +133,7 @@ Node *create_node(void *data, size_t size_of_data, nodeType node_type);
  */
 macroNode *create_macro_node(char *macro_name, char *macro_content);
 
-/*
+/**
  * Function that creates the label node itself.
  * @param label_name - The name of the label.
  * @param address - The address in memory of the label.
@@ -143,7 +143,17 @@ macroNode *create_macro_node(char *macro_name, char *macro_content);
  */
 labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command);
 
-/*
+/**
+ *  Function that creates the unknown label node.
+ *  @param label_name - The name of the label.
+ *  @param memory_index - The index of the memory that the encoded binary should be for this label.
+ *  @param line - The line where the label was given as an argument (For error display)
+ *  @param line_number - The number of the line.
+ *  @param IC - The IC of the encoded word.
+ */
+unknownLabelNode *create_unknown_label_node(char * label_name, short memory_index, char * line, int line_number, short IC);
+
+/**
  * Function that searches a node by its name.
  * @param head - Pointer to the head of the list.
  * @param name - The name to find in the linked list.
@@ -152,14 +162,14 @@ labelNode *create_label_node(char *label_name, unsigned short address, labelType
  */
 Node *search_node(Node *head, char *name, nodeType node_type);
 
-/*
+/**
  * Function that adds a node to the list.
  * @param head - Double pointer to the head of the list.
  * @param node - Pointer to the node to add.
  */
 void add_node(Node **head, Node *node);
 
-/*
+/**
  * Function that frees the all the nodes and the content inside each node.
  * @param head - Double pointer to the head of the list.
  * @param node_type - The type of nodes in the list.
@@ -167,46 +177,43 @@ void add_node(Node **head, Node *node);
  */
 void free_list(Node **head, nodeType node_type, freeType type);
 
-/*
- * Function that displays the list of macros node by node.
- * @param head - Pointer to the head of the list.
+/**
+ * Function that displays a list given
+ * @param head - Pointer to the head of the given list
+ * @param type - The type of the list to print (MACRO,LABEL,UNKNOWN_LABEL)
  */
-void print_macr_list(Node *head);
+void print_list(Node *head, nodeType type);
 
-/*
- * Function that displays the list of labels node by node.
- * @param head - Pointer to the head of the list.
- */
-void print_label_list(Node *head);
-
-/*
+/**
  * Function that initializes all the bits to zero.
  * @param code_word - Pointer to the code word to initialize;
  */
 void init_code_word(codeWord *word);
 
-/*
+/**
  * Function that prints the word bit by bit.
  * @param word - The word to print.
  */
 void print_bits(codeWord word);
 
-/*
+/**
  * Function that initializes a given instrParts / commandParts struct pointer.
  * @param iptr - Pointer to the instrParts struct.
  * @param cptr - Pointer to the commandParts struct.
  */
 void init_struct_parts(instrParts *iptr, commandParts *cptr);
 
-/*
+/**
  * Function that frees a given struct and its components.
  * @param iptr - Pointer to the instrParts struct.
  * @param cptr - Pointer to the commandParts struct.
  */
 void free_structs(instrParts *iptr, commandParts *cptr);
 
-/* Function that initializes the codes inside the memory to 0's
- * memory - Pointer to the array of the memory.
+
+/**
+ * Function that initializes the codes inside the memory to 0's
+ * @param memory - Pointer to the array of the memory.
  */
 void init_memory(codeWord memory[]);
 

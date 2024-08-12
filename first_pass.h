@@ -7,7 +7,7 @@
 #include "utils.h"
 
 
-/*
+/**
  * Function that starts the first pass for a given file.
  * @param file_name - The file name of the file to first pass on.th
  * @param macro_head - Double pointer to the head of the macro list.

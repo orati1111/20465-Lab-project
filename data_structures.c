@@ -31,26 +31,25 @@ macroNode *create_macro_node(char *macro_name, char *macro_content) {
         return NULL;
     temp->macr_name = strdupli(macro_name);
     if (temp->macr_name == NULL) {
-        free(temp);
+        cleanup("m", temp);
         return NULL;
     }
     temp->macr_content = strdupli(macro_content);
     if (temp->macr_content == NULL) {
-        free(temp->macr_name);
-        free(temp);
+        cleanup("sm", temp->macr_name, temp);
         return NULL;
     }
     return temp;
 }
 
-labelNode *create_label_node(char * label_name, unsigned short address, labelType type,bool is_label_command){
+labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command) {
     labelNode *temp = NULL;
     temp = malloc(sizeof(labelNode));
-    if(temp == NULL)
+    if (temp == NULL)
         return NULL;
     temp->label_name = strdupli(label_name);
-    if(temp->label_name == NULL){
-        free(temp);
+    if (temp->label_name == NULL) {
+        cleanup("l", temp);
         return NULL;
     }
     temp->address = address;
@@ -59,7 +58,27 @@ labelNode *create_label_node(char * label_name, unsigned short address, labelTyp
     return temp;
 }
 
-/* TODO: create a unknown labels node and list */
+unknownLabelNode *
+create_unknown_label_node(char *label_name, short memory_index, char *line, int line_number, short IC) {
+    unknownLabelNode *temp = NULL;
+    temp = malloc(sizeof(unknownLabelNode));
+    if (temp == NULL)
+        return NULL;
+    temp->label_name = strdupli(label_name);
+    if (temp->label_name == NULL) {
+        cleanup("u", temp);
+        return NULL;
+    }
+    temp->line = strdupli(line);
+    if (temp->line == NULL) {
+        cleanup("su", temp->label_name, temp);
+    }
+    temp->memory_index = memory_index;
+    temp->line_number = line_number;
+    temp->IC = IC;
+
+    return temp;
+}
 
 Node *search_node(Node *head, char *name, nodeType node_type) {
     Node *temp = head;
@@ -120,6 +139,7 @@ void free_list(Node **head, nodeType node_type, freeType type) {
     Node *next = NULL;
     macroNode *macro_node = NULL;
     labelNode *label_node = NULL;
+    unknownLabelNode *unknown_label_node = NULL;
 
     temp = *head;
 
@@ -147,6 +167,14 @@ void free_list(Node **head, nodeType node_type, freeType type) {
                 free(label_node->label_name);
             }
         }
+        /* In case the list is an unknown label list*/
+        else{
+            unknown_label_node = (unknownLabelNode *)temp->data;
+            if(unknown_label_node->label_name != NULL)
+                free(unknown_label_node->label_name);
+            if(unknown_label_node->line != NULL)
+                free(unknown_label_node->line);
+        }
         /* Freeing each data and node */
         if (type == ALL) {
             if (temp->data != NULL)
@@ -161,34 +189,52 @@ void free_list(Node **head, nodeType node_type, freeType type) {
         *head = NULL;
 }
 
-
-void print_macr_list(Node *head) {
-    Node *temp = NULL;
-    macroNode *macro_node = NULL;
-    temp = head;
-    while (temp != NULL) {
-        macro_node = (macroNode *)temp->data;
-        printf("\nMacro name: '%s'\n", macro_node->macr_name);
-        printf("Macro content: '%s'", macro_node->macr_content);
-        temp = temp->next;
-    }
-    printf("\n\n---END OF LIST---\n\n");
-}
-
-void print_label_list(Node *head) {
+void print_list(Node *head, nodeType type) {
     Node *temp = NULL;
     labelNode *label_node = NULL;
+    macroNode *macro_node = NULL;
+    unknownLabelNode *unknown_label_node = NULL;
+
     temp = head;
-    while (temp != NULL) {
-        label_node = (labelNode *) temp->data;
-        printf("\nLabel Name: '%s'\n", label_node->label_name);
-        printf("Label address: '%d'\n", label_node->address);
-        printf("Label type: '%d'\n", label_node->label_type);
-        printf("Is command: '%d'",label_node->is_label_command);
-        temp = temp->next;
+
+    /* The list given is a macro list */
+    if (type == MACRO) {
+        while (temp != NULL) {
+            macro_node = (macroNode *) temp->data;
+            printf("\nMacro name: '%s'\n", macro_node->macr_name);
+            printf("Macro content: '%s'", macro_node->macr_content);
+            temp = temp->next;
+        }
+        printf("\n\n---END OF LIST---\n\n");
     }
-    printf("\n\n---END OF LIST---\n\n");
+        /* The list given is a label list */
+    else if (type == LABEL) {
+        while (temp != NULL) {
+            label_node = (labelNode *) temp->data;
+            printf("\nLabel Name: '%s'\n", label_node->label_name);
+            printf("Label address: '%d'\n", label_node->address);
+            printf("Label type: '%d'\n", label_node->label_type);
+            printf("Is command: '%d'", label_node->is_label_command);
+            temp = temp->next;
+        }
+        printf("\n\n---END OF LIST---\n\n");
+    }
+        /* the list given is an Unknown label list*/
+    else {
+        while (temp != NULL) {
+            unknown_label_node = (unknownLabelNode *) temp->data;
+            printf("\nLabel Name: '%s'\n", unknown_label_node->label_name);
+            printf("Label IC: '%d'\n", unknown_label_node->IC);
+            printf("Memory index: '%d'\n", unknown_label_node->memory_index);
+            printf("The line: '%s'", unknown_label_node->line);
+            printf("The linen number '%d'", unknown_label_node->line_number);
+            temp = temp->next;
+        }
+        printf("\n\n---END OF LIST---\n\n");
+    }
+
 }
+
 
 void init_code_word(codeWord *word) {
     word->bits[0] = 0;
@@ -198,23 +244,22 @@ void init_code_word(codeWord *word) {
 void print_bits(codeWord word) {
     int i;
     int byte_index, bit_index, bit;
-    for (i = SIZE_OF_WORD-1; i >= 0 ; --i) {
+    for (i = SIZE_OF_WORD - 1; i >= 0; --i) {
         byte_index = i / 8;
         bit_index = i % 8;
         bit = (word.bits[byte_index] >> bit_index) & 1;
-        printf("%d",bit);
+        printf("%d", bit);
     }
     printf("\n");
 }
 
-void init_struct_parts(instrParts * iptr, commandParts * cptr){
-    if(iptr != NULL) {
+void init_struct_parts(instrParts *iptr, commandParts *cptr) {
+    if (iptr != NULL) {
         iptr->label = NULL;
         iptr->type = NONE;
         iptr->length.string_length = 0;
         iptr->data.string = NULL;
-    }
-    else{
+    } else {
         cptr->label = NULL;
         cptr->op_code = 0;
         cptr->dst = NULL;
@@ -225,26 +270,25 @@ void init_struct_parts(instrParts * iptr, commandParts * cptr){
     }
 }
 
-void free_structs(instrParts *iptr ,commandParts * cptr){
-    if(iptr != NULL) {
-        if(iptr->type == DATA)
+void free_structs(instrParts *iptr, commandParts *cptr) {
+    if (iptr != NULL) {
+        if (iptr->type == DATA)
             free(iptr->data.numbers);
-        if(iptr->type == STRING)
+        if (iptr->type == STRING)
             free(iptr->data.string);
         free(iptr);
-    }
-    else{
-        if(cptr->src != NULL)
+    } else {
+        if (cptr->src != NULL)
             free(cptr->src);
-        if(cptr->dst != NULL)
+        if (cptr->dst != NULL)
             free(cptr->dst);
         free(cptr);
     }
 }
 
-void init_memory(codeWord memory[MAX_MEMORY_SIZE]){
+void init_memory(codeWord memory[MAX_MEMORY_SIZE]) {
     int i;
-    for(i=0;i<MAX_MEMORY_SIZE;i++){
+    for (i = 0; i < MAX_MEMORY_SIZE; i++) {
         init_code_word(&memory[i]);
     }
 }

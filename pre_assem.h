@@ -5,7 +5,7 @@
 
 #include "data_structures.h"
 
-/*
+/**
  * Function that starts the pre assembler process.
  * @param file_name - the file name of the file to start the pre assembler on.
  * @param macro_head - Double pointer to the head of the macro list.
@@ -13,7 +13,7 @@
  */
 int start_pre_assem(char *file_name, Node **macro_head);
 
-/*
+/**
  * Function that reads the file, looking for macro declarations and store them in the linked list.
  * @param fp - Pointer of the file that it reads.
  * @param head - Double pointer to the head of the list.
@@ -21,7 +21,7 @@ int start_pre_assem(char *file_name, Node **macro_head);
  */
 int add_macros_to_list(FILE *fp, Node **head);
 
-/*
+/**
  * Function that reads the content of the macro to save them as a string.
  * @param fp - Pointer of the file that it reads.
  * @param pos - Pointer to the position inside the file.

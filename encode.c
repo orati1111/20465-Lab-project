@@ -27,14 +27,10 @@ encode_instruction(instrParts *instruction, codeWord memory[MAX_MEMORY_SIZE], in
 
     for (i = 0; i < length; i++) {
         init_code_word(&code);
-        if (type == DATA){
-            convert_to_binary(((int *) input)[i], &code, true);
-            printf("%d: ", ((int *) input)[i]);
-            print_bits(code);
-        }
-
-        else {
-            convert_to_binary(((char *) input)[i], &code, true);
+        if (type == DATA) {
+            convert_to_binary(((int *) input)[i], &code, FULL);
+        } else {
+            convert_to_binary(((char *) input)[i], &code, FULL);
         }
 
         memory[*memory_index] = code;
@@ -88,12 +84,12 @@ encode_first_word(char *src, char *dst, addressMode src_mode, addressMode dst_mo
 
     /* Storing the code */
     memory[*memory_index] = code;
+    printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
     (*memory_index)++;
     (*IC)++;
 
 }
 
-/* TODO: add the head of the unknown label linked list */
 void encode_word(char *src, char *dst, addressMode src_mode, addressMode dst_mode, int *memory_index,
                  codeWord memory[MAX_MEMORY_SIZE],
                  unsigned short *IC, bool both_registers, Node **label_head, Node **unknown_label_head, char *line,
@@ -101,25 +97,36 @@ void encode_word(char *src, char *dst, addressMode src_mode, addressMode dst_mod
     codeWord code;
     init_code_word(&code);
 
-    /* TODO: add the indexing of the memory array and increment the IC */
     /* Handle when both arguments are registers */
     if (both_registers == true) {
         code = encode_both_registers(src, dst, src_mode, dst_mode);
+        memory[*memory_index] = code;
+        (*memory_index)++;
+        (*IC)++;
     } else {
         if (src != NULL) {
             if (src_mode != DIRECT)
                 code = encode_argument(src, src_mode, true);
             else
                 code = encode_label(src, memory_index, IC, label_head, unknown_label_head, line, line_number);
+            memory[*memory_index] = code;
+            printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
+//            print_bits(memory[*memory_index]);
+            (*memory_index)++;
+            (*IC)++;
         }
         if (dst != NULL) {
             if (dst_mode != DIRECT)
                 code = encode_argument(dst, dst_mode, false);
             else
                 code = encode_label(dst, memory_index, IC, label_head, unknown_label_head, line, line_number);
+            memory[*memory_index] = code;
+            printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
+//            print_bits(memory[*memory_index]);
+            (*memory_index)++;
+            (*IC)++;
         }
     }
-    print_bits(code);
 }
 
 
@@ -139,6 +146,8 @@ codeWord encode_both_registers(char *src, char *dst, addressMode src_mode, addre
     code2 = encode_argument(dst, dst_mode, false);
     code = bitwise_or_codes(code1, code2);
 
+    return code;
+
 }
 
 codeWord encode_argument(char *arg, addressMode mode, bool is_src) {
@@ -151,22 +160,26 @@ codeWord encode_argument(char *arg, addressMode mode, bool is_src) {
         ptr = strchr(arg, '#');
         ptr++;
         number = atoi(ptr);
-        printf("%d: ",number);
-        convert_to_binary(number, &code, false);
-        /* Encode indirect reg for example *r2 */
-    } else if (mode == INDIRECT_REG) {
+        convert_to_binary(number, &code, OTHER);
 
-        /* Encode direct reg for example r2 */
-    } else {
 
+    }/* Encode indirect reg  (*r2) or direct reg (r2) */
+    else {
+        ptr = strchr(arg, 'r');
+        ptr++;
+        number = atoi(ptr);
+        if (is_src == true)
+            convert_to_binary(number, &code, SRC);
+        else
+            convert_to_binary(number, &code, DST);
     }
+
     /* Direct (labels) is encoded in a different function */
     set_are_field_binary(&code, A);
     return code;
 
 }
 
-/* TODO: add the head of the unknown labels list, Add the label list head and info like line, line_number*/
 codeWord
 encode_label(char *arg, int *memory_index, unsigned short *IC, Node **label_head, Node **unknown_label_head, char *line,
              int line_number) {
@@ -178,6 +191,8 @@ encode_label(char *arg, int *memory_index, unsigned short *IC, Node **label_head
     /* TODO: search the node */
     /* TODO: if the label is extern -> encode with E and return the code and store info inside the unknown */
     /* TODO: just add the information to the linked list*/
+
+    return code;
 }
 
 char encode_address_mode_map(addressMode src, addressMode dst) {

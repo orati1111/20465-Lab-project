@@ -69,32 +69,28 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, cod
             continue;
         }
 
-        /* Locate '.' in the string for instruction */
-        if (strchr(cpy, '.') != NULL) {
-            /* Locate '.entry' or '.extern' */
-            if (strstr(cpy, ".entry") != NULL || strstr(cpy, ".extern") != NULL) {
-                construct_extern_entry(cpy, macro_head, label_head, line_number, &num_of_entries, &num_of_externs);
-                /* TODO: probably do something here */
-            } else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
-                instruction = construct_instruction(cpy, macro_head, label_head, line_number, DC);
-                if (instruction == NULL) {
-                    no_error = false;
-                } else {
-                    encode_instruction(instruction, memory, &memory_dc_index, &DC);
-                    cleanup("i", instruction);
-                }
-
-            }
-                /* TODO: add that it s probably an error */
-            else {
+        /* Locate '.entry' or '.extern' */
+        if (strstr(cpy, ".entry") != NULL || strstr(cpy, ".extern") != NULL) {
+            construct_extern_entry(cpy, macro_head, label_head, line_number, &num_of_entries, &num_of_externs);
+            /* TODO: probably do something here */
+        } else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
+            instruction = construct_instruction(cpy, macro_head, label_head, line_number, DC);
+            if (instruction == NULL) {
+                no_error = false;
+            } else {
+                encode_instruction(instruction, memory, &memory_dc_index, &DC);
+                cleanup("i", instruction);
             }
 
         }
+            /* TODO: add that it s probably an error */
+
             /* Command */
         else {
             command = construct_command(cpy, macro_head, label_head, line_number, IC);
             if (command != NULL) {
-                encode_command(command, memory, &memory_ic_index, &IC, label_head, unknown_label_head,cpy,line_number);
+                encode_command(command, memory, &memory_ic_index, &IC, label_head, unknown_label_head, cpy,
+                               line_number);
                 cleanup("c", command);
             }
         }
@@ -103,11 +99,11 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, cod
     fclose(fp_am);
     free_list(macro_head, MACRO, ALL);
     free_list(label_head, LABEL, ALL);
-//    for (i = memory_length; i >= memory_dc_index - 2; i--) {
-//        printf("%d: ", convert_binary_to_octal(memory[i]));
+//    for(i = 0; i < memory_ic_index; i++){
 //        print_bits(memory[i]);
-//
-//
+//    }
+//    for(i = memory_length ; i >= memory_dc_index ; i--){
+//        print_bits(memory[i]);
 //    }
 
 
