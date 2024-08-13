@@ -10,6 +10,9 @@
 /* File Extensions */
 #define AS_EXTENSION ".as"
 #define AM_EXTENSION ".am"
+#define OBJ_EXTENSION ".ob"
+#define EXT_EXTENSION ".ext"
+#define ENT_EXTENSION ".ent"
 
 /* Limiters */
 #define MAX_CHAR_IN_LINE 82

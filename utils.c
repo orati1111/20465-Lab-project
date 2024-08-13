@@ -254,14 +254,14 @@ void cleanup(const char *order, ...) {
             if (numbers != NULL)
                 free(numbers);
         }
-        if(*ptr == 'm'){
+        if (*ptr == 'm') {
             macro_node = va_arg(args, macroNode *);
-            if(macro_node != NULL)
+            if (macro_node != NULL)
                 free(macro_node);
         }
-        if(*ptr == 'u'){
+        if (*ptr == 'u') {
             unknown_label_node = va_arg(args, unknownLabelNode *);
-            if(unknown_label_node != NULL)
+            if (unknown_label_node != NULL)
                 free(unknown_label_node);
         }
     }
@@ -327,21 +327,19 @@ bool is_whole_number(char *number) {
 
 void convert_to_binary(int input, codeWord *code, numberEncodeType type) {
     int i;
-    int start_bit = 0, end_bit = SIZE_OF_WORD;
-    if(type == DST){
+    int start_bit = 0, end_bit = SIZE_OF_WORD - 1;
+    if (type == DST) {
         start_bit = 3;
         end_bit = 5;
-    }
-    else if(type == SRC){
+    } else if (type == SRC) {
         start_bit = 6;
         end_bit = 8;
-    }
-    else if(type == OTHER){
+    } else if (type == OTHER) {
         start_bit = 3;
     }
     /* else is not needed because the default is FULL */
-    for (i = start_bit; i < end_bit; i++) {
-        if (input & (1 << (i-start_bit)))
+    for (i = start_bit; i <= end_bit; i++) {
+        if (input & (1 << (i - start_bit)))
             code->bits[i / 8] |= (1 << (i % 8));
     }
 
@@ -393,15 +391,15 @@ codeWord bitwise_or_codes(codeWord code1, codeWord code2) {
     codeWord result;
 
     /* Convert codeWord to unsigned short */
-    int1 = ((unsigned short)code1.bits[0] << 8) | code1.bits[1];
-    int2 = ((unsigned short)code2.bits[0] << 8) | code2.bits[1];
+    int1 = ((unsigned short) code1.bits[0] << 8) | code1.bits[1];
+    int2 = ((unsigned short) code2.bits[0] << 8) | code2.bits[1];
 
     /* Perform bitwise OR */
     orResult = int1 | int2;
 
     /* Store result back in codeWord */
-    result.bits[0] = (unsigned char)(orResult >> 8);
-    result.bits[1] = (unsigned char)(orResult & 0xFF);
+    result.bits[0] = (unsigned char) (orResult >> 8);
+    result.bits[1] = (unsigned char) (orResult & 0xFF);
     return result;
 }
 

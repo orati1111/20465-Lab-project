@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "encode.h"
+#include "errors.h"
 
 
 void
@@ -14,8 +15,6 @@ encode_instruction(instrParts *instruction, codeWord memory[MAX_MEMORY_SIZE], in
     size_t length;
     void *input;
     int i;
-
-    init_code_word(&code);
 
     if (type == DATA) {
         length = instruction->length.amount_of_numbers;
@@ -32,6 +31,7 @@ encode_instruction(instrParts *instruction, codeWord memory[MAX_MEMORY_SIZE], in
         } else {
             convert_to_binary(((char *) input)[i], &code, FULL);
         }
+
 
         memory[*memory_index] = code;
         (*memory_index)--;
@@ -84,7 +84,6 @@ encode_first_word(char *src, char *dst, addressMode src_mode, addressMode dst_mo
 
     /* Storing the code */
     memory[*memory_index] = code;
-    printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
     (*memory_index)++;
     (*IC)++;
 
@@ -110,8 +109,6 @@ void encode_word(char *src, char *dst, addressMode src_mode, addressMode dst_mod
             else
                 code = encode_label(src, memory_index, IC, label_head, unknown_label_head, line, line_number);
             memory[*memory_index] = code;
-            printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
-//            print_bits(memory[*memory_index]);
             (*memory_index)++;
             (*IC)++;
         }
@@ -121,8 +118,6 @@ void encode_word(char *src, char *dst, addressMode src_mode, addressMode dst_mod
             else
                 code = encode_label(dst, memory_index, IC, label_head, unknown_label_head, line, line_number);
             memory[*memory_index] = code;
-            printf("%.05d\n", convert_binary_to_octal(memory[*memory_index]));
-//            print_bits(memory[*memory_index]);
             (*memory_index)++;
             (*IC)++;
         }
@@ -185,12 +180,31 @@ encode_label(char *arg, int *memory_index, unsigned short *IC, Node **label_head
              int line_number) {
     Node *temp = NULL;
     labelNode *found = NULL;
+    unknownLabelNode *unknown_label = NULL;
     codeWord code;
 
     init_code_word(&code);
-    /* TODO: search the node */
-    /* TODO: if the label is extern -> encode with E and return the code and store info inside the unknown */
-    /* TODO: just add the information to the linked list*/
+    if((temp = search_node(*label_head,arg,LABEL)) != NULL){
+        found = (labelNode*)temp->data;
+        /* Setting the code as extern */
+        if(found->label_type == EXTERN){
+            set_are_field_binary(&code,E);
+        }
+    }
+    /* Adding the labels to the linked list for second pass */
+    unknown_label = create_unknown_label_node(arg, *memory_index, line, line_number, *IC);
+    /* TODO: check with the group about exiting memory errors */
+    if(unknown_label == NULL){
+        generate_error(ERROR_MALLOC_FAILED,line_number,line);
+        exit(0);
+    }
+    temp = create_node(unknown_label, sizeof(unknownLabelNode),UNKNOWN_LABEL);
+    cleanup("u",unknown_label);
+    if(temp == NULL){
+        generate_error(ERROR_MALLOC_FAILED,line_number,line);
+        exit(0);
+    }
+    add_node(unknown_label_head,temp);
 
     return code;
 }

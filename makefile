@@ -1,7 +1,7 @@
  CC = gcc
  CFLAGS = -ansi -Wall -pedantic -g
  GLOBAL_DEPS = globals.h
- EXE_DEPS = assembler.o utils.o pre_assem.o first_pass.o data_structures.o errors.o lexer.o encode.o
+ EXE_DEPS = assembler.o utils.o pre_assem.o first_pass.o data_structures.o errors.o lexer.o encode.o second_pass.o
  VALGRIND_FLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose
  PROG = assembler
  ARG1 = first_argument
@@ -34,6 +34,9 @@ lexer.o: $(GLOBAL_DEPS)
 
 encode.o: $(GLOBAL_DEPS)
 	$(CC) -c encode.c $(CFLAGS) -o $@
+
+second_pass.o: $(GLOBAL_DEPS)
+	$(CC) -c second_pass.c $(CFLAGS) -o $@
 
 clean:
 	rm -rf *.o *.am *.ob *.ent *.ext

@@ -53,10 +53,10 @@ typedef struct label_node {
  */
 typedef struct unknown_label_node {
     char *label_name;
-    short memory_index;
+    int memory_index;
     char *line;
     int line_number;
-    short IC;
+    unsigned short IC;
 } unknownLabelNode;
 
 /**
@@ -151,7 +151,7 @@ labelNode *create_label_node(char *label_name, unsigned short address, labelType
  *  @param line_number - The number of the line.
  *  @param IC - The IC of the encoded word.
  */
-unknownLabelNode *create_unknown_label_node(char * label_name, short memory_index, char * line, int line_number, short IC);
+unknownLabelNode *create_unknown_label_node(char * label_name, int memory_index, char * line, int line_number, unsigned short IC);
 
 /**
  * Function that searches a node by its name.

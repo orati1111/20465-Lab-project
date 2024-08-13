@@ -42,6 +42,7 @@
 #define ERR_MSG_IMID_MODE_INVALID_NUMBER "In address mode immediate, The number should be whole in [-2048, 2047]"
 #define ERR_MSG_IND_REG_INVALID "In address mode indirect register, There should be a register following the *."
 #define ERR_MSG_UNKNOWN_REGISTER "Unknown register name, r0-r7 are allowed."
+#define ERR_MSG_UNKNOWN_LABEL "Unknown label was given as an argument."
 
 /* The Error to number mapping */
 enum {
@@ -67,6 +68,7 @@ enum {
     ERROR_LABEL_ALREADY_EXISTS,
     ERROR_EXTERN_ENTRY,
     ERROR_LABEL_EMPTY_DECL,
+    ERROR_UNKNOWN_LABEL,
 
     /* Op and arguments Errors */
     ERROR_UNKNOWN_OP_NAME,

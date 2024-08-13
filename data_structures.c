@@ -59,7 +59,7 @@ labelNode *create_label_node(char *label_name, unsigned short address, labelType
 }
 
 unknownLabelNode *
-create_unknown_label_node(char *label_name, short memory_index, char *line, int line_number, short IC) {
+create_unknown_label_node(char *label_name, int memory_index, char *line, int line_number, unsigned short IC) {
     unknownLabelNode *temp = NULL;
     temp = malloc(sizeof(unknownLabelNode));
     if (temp == NULL)

@@ -32,8 +32,7 @@ bool line_is_comment(char *line) {
 }
 
 /* TODO: add ic dc*/
-bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number, int *num_of_entries,
-                            int *num_of_externs) {
+bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number) {
     char *cpy = NULL;
     char *ptr = NULL;
     char *keyword = NULL;
@@ -73,16 +72,10 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
     }
 
     /* Handling the label declaration */
-    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0,false);
+    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0, false);
     if (temp == NULL) {
         cleanup("s", cpy);
         return false;
-    }
-
-    if (type == EXTERN)
-        (*num_of_externs)++;
-    else {
-        (*num_of_entries)++;
     }
 
     cleanup("s", cpy);
@@ -319,7 +312,8 @@ handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_
     labelNode *label_node = NULL;
     Node *temp = NULL;
 
-    if ((error = validate_label_decl(label_name, macro_head, label_head, type, memory_counter, &replace_flag, &temp,is_label_command)) !=
+    if ((error = validate_label_decl(label_name, macro_head, label_head, type, memory_counter, &replace_flag, &temp,
+                                     is_label_command)) !=
         NO_ERROR) {
         generate_error(error, line_number, line);
         return NULL;
@@ -637,7 +631,6 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
 int get_address_mode(char *argument, int *error, Node **macro_head) {
     char *ptr = NULL;
     char *temp = NULL;
-    int number;
 
     /* Immediate */
     if ((ptr = strchr(argument, '#')) != NULL) {
@@ -651,7 +644,7 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
         /* Moving the pointer to the next character */
         ptr++;
         remove_trailing_spaces(ptr);
-        if (is_whole_number(ptr) == false || (atoi(ptr) > BITS_12_MAX_NUMBER  || atoi(ptr) < BITS_12_MIN_NUMBER)) {
+        if (is_whole_number(ptr) == false || (atoi(ptr) > BITS_12_MAX_NUMBER || atoi(ptr) < BITS_12_MIN_NUMBER)) {
             *error = ERROR_IMID_MODE_INVALID_INPUT;
         }
 
@@ -663,8 +656,6 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
 
     }
 
-    /* TODO: error where there is a 'r' inside the label */
-    /* TODO: r9 r8 is legal names */
         /* Indirect register */
     else if ((ptr = strchr(argument, '*')) != NULL) {
         ptr = strdupli(ptr);
@@ -689,26 +680,15 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
             return INDIRECT_REG;
         }
 
-    }
-
-        /* Direct reg */
-    else if (strchr(argument, 'r') != NULL) {
+    } else {
         ptr = strdupli(argument);
         remove_leading_spaces(ptr);
         remove_trailing_spaces(ptr);
-        if (is_name_register(ptr) == false)
-            *error = ERROR_UNKNOWN_REGISTER;
-        cleanup("s", ptr);
-        if (*error != NO_ERROR)
-            return NOT_LEGAL;
-        else
+        /* Checking registers */
+        if (is_name_register(ptr) == true) {
+            cleanup("s", ptr);
             return DIRECT_REG;
-    }
-        /* Direct */
-    else {
-        ptr = strdupli(argument);
-        remove_leading_spaces(ptr);
-        remove_trailing_spaces(ptr);
+        }
         if (is_name_legal(ptr) == false || is_name_alphanumeric(ptr) == false ||
             search_node(*macro_head, ptr, MACRO) != NULL) {
             *error = ERROR_ILLEGAL_LABEL_NAME;

@@ -36,12 +36,9 @@ bool line_is_comment(char *line);
  * @param macro_head - Double pointer to the head of the macro list.
  * @param label_head - Double pointer to the head of the label list.
  * @param line_number - The number of the line given in the file.
- * @param num_of_entries - Pointer to the number of entry labels in the program.
- * @param num_of_externs - Pointer to the number of extern lables in the program.
  * @return True if it succeeded, false otherwise.
  */
-bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number, int *num_of_entries,
-                            int *num_of_externs);
+bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number);
 
 /**
  * Function that constructs an instruction from a given line.
