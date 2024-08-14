@@ -44,7 +44,8 @@ char *add_file_extension(char *base_file_name, char *extension) {
 
 bool is_name_legal(char *name) {
     /* Name as the macro declaration */
-    if (strcmp(name, "macr") == 0 || strcmp(name, "endmacr") == 0)
+    if (strcmp(name, "macr") == 0 || strcmp(name, "endmacr") == 0 || strcmp(name, "string") == 0 ||
+        strcmp(name, "data") == 0)
         return false;
     return (is_name_op_name(name) == -1) && !is_name_register(name) && isalpha(name[0]);
 
@@ -153,9 +154,9 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
     fp_am = fopen(am_file, "w");
     /* Couldn't open the file */
     if (fp_am == NULL) {
-        generate_error(ERROR_COULDNT_WRITE_AM_FILE, -1, "");
+        generate_error(ERROR_COULDNT_WRITE_FILE, -1, "");
         remove(am_file);
-        return false;
+        exit(0);
     }
     /* Reading the file */
     while (fgets(buffer, BUFFER_SIZE, fp_as)) {
@@ -264,7 +265,6 @@ void cleanup(const char *order, ...) {
 int check_multiple_commas(char *input) {
     char *ptr = NULL;
     char *cpy = NULL;
-
     if (input == NULL)
         return NO_ERROR;
 
@@ -277,6 +277,9 @@ int check_multiple_commas(char *input) {
         while (*ptr != '\0') {
             if (*ptr == ',') {
                 ptr++;
+                while (isspace(*ptr)) {
+                    ptr++;
+                }
                 if (*ptr == ',') {
                     cleanup("s", cpy);
                     return ERROR_MULTIPLE_COMMAS;
@@ -393,6 +396,30 @@ codeWord bitwise_or_codes(codeWord code1, codeWord code2) {
     result.bits[0] = or_result >> 8;
     result.bits[1] = or_result & 0xFF;
     return result;
+}
+
+void remove_unwanted_files(char *raw_file_name) {
+    FILE *ptr_ent = NULL;
+    FILE *ptr_ext = NULL;
+    char *ent = NULL;
+    char *ext = NULL;
+
+    ent = add_file_extension(raw_file_name, ENT_EXTENSION);
+    ext = add_file_extension(raw_file_name, EXT_EXTENSION);
+
+    ptr_ent = fopen(ent, "r");
+    if (ptr_ent != NULL) {
+        fclose(ptr_ent);
+        remove(ent);
+    }
+
+    ptr_ext = fopen(ext, "r");
+    if (ptr_ext != NULL) {
+        fclose(ptr_ext);
+        remove(ext);
+    }
+
+    cleanup("ss", ent, ext);
 }
 
 

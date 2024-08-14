@@ -190,7 +190,7 @@ char *save_macro_content(FILE *fp, fpos_t *pos, int *line_number) {
             if (temp == NULL) {
                 generate_error(ERROR_REALLOC_FAILED, -1,"");
                 cleanup("s",content);
-                return NULL;
+                exit(0);
             }
             content = temp;
         }

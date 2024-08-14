@@ -175,4 +175,13 @@ int validate_commas_format(char *line);
 codeWord bitwise_or_codes(codeWord code1, codeWord code2);
 
 
+
+/**
+ * Function that removes unwanted ext, ent file in case the program ran twice without using "make clean"
+ * Since im appending to the .ent and .ext files, running the program twice in a row will double the output.
+ * Only here for safety measures.
+ * @param raw_file_name - The file name.
+ */
+void remove_unwanted_files(char *raw_file_name);
+
 #endif

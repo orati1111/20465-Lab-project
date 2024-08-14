@@ -84,6 +84,9 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, cod
                                line_number);
                 cleanup("c", command);
             }
+            else{
+                no_error = false;
+            }
         }
 
     }

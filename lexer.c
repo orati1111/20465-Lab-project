@@ -43,7 +43,7 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
     cpy = strdupli(line);
     if (cpy == NULL) {
         generate_error(ERROR_MALLOC_FAILED, -1, "");
-        return false;
+        exit(0);
     }
     if ((ptr = strstr(cpy, ".entry")) != NULL) {
         keyword = ".entry";
@@ -165,13 +165,13 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
     cpy = strdupli(line);
     if (cpy == NULL) {
         generate_error(ERROR_MALLOC_FAILED, -1, "");
-        return NULL;
+        exit(0);
     }
 
     command = malloc(sizeof(commandParts));
     if (command == NULL) {
         generate_error(ERROR_MALLOC_FAILED, -1, "");
-        return NULL;
+        exit(0);
     }
 
     init_struct_parts(NULL, command);
@@ -321,7 +321,7 @@ handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_
         label_node = create_label_node(label_name, memory_counter, type, is_label_command);
         if (label_node == NULL) {
             generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
-            return NULL;
+            exit(0);
         }
         temp = create_node(label_node, sizeof(labelNode), LABEL);
         cleanup("l", label_node);
@@ -373,7 +373,7 @@ char *get_string(const char *line) {
     result = malloc((size + 1) * sizeof(char));
     if (result == NULL) {
         generate_error(ERROR_MALLOC_FAILED, -1, "");
-        return NULL;
+        exit(0);
     }
     strncpy(result, start_ptr, size);
     result[size] = '\0';
@@ -425,7 +425,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
     numbers = (int *) malloc(capacity * sizeof(int));
     if (numbers == NULL) {
         generate_error(ERROR_MALLOC_FAILED, -1, "");
-        return NULL;
+        exit(0);
     }
 
     /* Tokenizing by ',' */
@@ -441,7 +441,7 @@ int *get_numbers(char *cpy, int line_number, char *line, short *num_of_numbers) 
                 if (temp == NULL) {
                     free(numbers);
                     generate_error(ERROR_MALLOC_FAILED, -1, "");
-                    return NULL;
+                    exit(0);
                 } else {
                     numbers = temp;
                 }
@@ -553,6 +553,11 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
 
     remove_leading_spaces(cpy);
     remove_trailing_spaces(cpy);
+
+    if (check_multiple_commas(cpy) != NO_ERROR) {
+        cleanup("s", cpy);
+        return ERROR_MULTIPLE_COMMAS;
+    }
 
     if (number_of_arguments == 1) {
         dst_address_mode = get_address_mode(cpy, &error_dst, macro_head);

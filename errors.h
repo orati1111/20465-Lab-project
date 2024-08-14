@@ -15,7 +15,7 @@
 #define ERR_MSG_COULDNT_SET_POS_POINTER "Couldn't set the position pointer in the given file."
 #define ERR_MSG_EXTRA_TEXT_AFTER_ENDMACR "Extra text after the end of macro declaration."
 #define ERR_MSG_MACRO_ALREADY_EXISTS "Attempt to declare a macro with name that already exists in the macro list."
-#define ERR_MSG_COULDNT_WRITE_AM_FILE "Couldn't write to the am file."
+#define ERR_MSG_COULDNT_WRITE_FILE "Couldn't write to the given file."
 #define ERR_MSG_LONG_MACRO_NAME "The macro name given is too long (exceeds 31) "
 #define ERR_MSG_COULDNT_CREATE_NODE "Couldn't create a node in the linked list."
 #define ERR_MSG_LINE_TOO_LONG "The line exceeds the 80 characters limit."
@@ -92,7 +92,7 @@ enum {
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,
     ERROR_COULDNT_SET_POS_POINTER,
-    ERROR_COULDNT_WRITE_AM_FILE,
+    ERROR_COULDNT_WRITE_FILE,
 
     /* Memory Errors */
     ERROR_MALLOC_FAILED,

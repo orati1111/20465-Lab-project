@@ -17,16 +17,19 @@ start_second_pass(char *raw_file_name, Node **unknown_labels_head, Node **label_
 
     int second_pass_error = NO_ERROR;
     char *obj_file = NULL;
+    char *ext_file = NULL;
     FILE *obj_ptr = NULL;
 
-
+    /* Removing leftovers - safety */
+    remove_unwanted_files(raw_file_name);
+    ext_file = add_file_extension(raw_file_name, EXT_EXTENSION);
     obj_file = add_file_extension(raw_file_name, OBJ_EXTENSION);
 
     /* Updating the addresses of the stored labels */
     update_label_address(*label_head, *IC, *DC);
 
     /* Iterating the unknown labels */
-    second_pass_error = update_memory_write_ext_file(unknown_labels_head, label_head, memory, raw_file_name);
+    second_pass_error = update_memory_write_ext_file(unknown_labels_head, label_head, memory, ext_file);
 
 
     /* Everything is ok*/
@@ -35,15 +38,18 @@ start_second_pass(char *raw_file_name, Node **unknown_labels_head, Node **label_
 
         if (obj_ptr == NULL) {
             generate_error(ERROR_COULDNT_OPEN_FILE, -1, "");
-            cleanup("s", obj_file);
-            return;
+            remove(ext_file);
+            cleanup("ss", obj_file, ext_file);
+            exit(0);
         }
         write_object_file(obj_ptr, memory, *memory_ic_index, IC, DC);
         last_iteration(raw_file_name, label_head);
-        cleanup("s", obj_file);
+        cleanup("ss", obj_file, ext_file);
 
-    } else
-        cleanup("s", obj_file);
+    } else {
+        remove(ext_file);
+        cleanup("ss", obj_file, ext_file);
+    }
 
     free_list(label_head, LABEL, ALL);
     free_list(unknown_labels_head, UNKNOWN_LABEL, ALL);
@@ -68,18 +74,16 @@ void update_label_address(Node *label_head, unsigned short IC, unsigned short DC
 }
 
 int update_memory_write_ext_file(Node **unknown_label_head, Node **label_head, codeWord memory[4096],
-                                 char *raw_file_name) {
+                                 char *ext_file) {
 
     Node *temp = NULL;
     Node *found = NULL;
     unknownLabelNode *unknown_label_node = NULL;
     labelNode *found_data = NULL;
-    char *ext_file = NULL;
+
     codeWord code;
     labelType type;
 
-
-    ext_file = add_file_extension(raw_file_name, EXT_EXTENSION);
     temp = *unknown_label_head;
 
     while (temp != NULL) {
@@ -101,12 +105,10 @@ int update_memory_write_ext_file(Node **unknown_label_head, Node **label_head, c
             }
         } else {
             generate_error(ERROR_UNKNOWN_LABEL, unknown_label_node->line_number, unknown_label_node->line);
-            cleanup("s", ext_file);
             return ERROR_UNKNOWN_LABEL;
         }
         temp = temp->next;
     }
-    cleanup("s", ext_file);
     return NO_ERROR;
 }
 
@@ -145,9 +147,9 @@ void write_ext_ent_file(char *file_name, char *label_name, unsigned short addres
     }
     /* Printing to the files with given margins and sizes for the labels and addresses to align*/
     if (type == EXTERN)
-        fprintf(ptr, "%*s%-*s %0*d\n", MARGIN, "", MAX_MACRO_LABEL_LENGTH, label_name, ADDRESS_SIZE, address);
+        fprintf(ptr, "%-32s %04d\n", label_name, address);
     else
-        fprintf(ptr, "%*s%-*s %*d\n", MARGIN, "", MAX_MACRO_LABEL_LENGTH, label_name, ADDRESS_SIZE, address);
+        fprintf(ptr, "%-32s %-4d\n", label_name, address);
     cleanup("f", ptr);
 }
 

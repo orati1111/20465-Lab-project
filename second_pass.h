@@ -37,11 +37,11 @@ void update_label_address(Node *label_head, unsigned short IC, unsigned short DC
  * @param unknown_label_head - Double pointer to the head of the unknown labels list.
  * @param label_head - Double pointer to the head of the labels list.
  * @param memory - The memory
- * @param raw_file_name - The raw file name.
+ * @param ext_file - The file name of the with .ext
  * @return NO_ERROR if succeeded, error_number otherwise.
  */
 int
-update_memory_write_ext_file(Node **unknown_label_head, Node **label_head, codeWord memory[4096], char *raw_file_name);
+update_memory_write_ext_file(Node **unknown_label_head, Node **label_head, codeWord memory[4096], char *ext_file);
 
 /**
  * Function that writes the object file.
