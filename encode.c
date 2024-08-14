@@ -41,7 +41,6 @@ encode_instruction(instrParts *instruction, codeWord memory[MAX_MEMORY_SIZE], in
 
 }
 
-/* TODO: add the Unknown labels here and create a function that increments the size. */
 void encode_command(commandParts *command, codeWord memory[MAX_MEMORY_SIZE], int *memory_index, unsigned short *IC,
                     Node **label_head, Node **unknown_label_head, char *line, int line_number) {
     char *src = command->src;
@@ -57,8 +56,6 @@ void encode_command(commandParts *command, codeWord memory[MAX_MEMORY_SIZE], int
     /* The rest */
     encode_word(src, dst, src_mode, dst_mode, memory_index, memory, IC, both_registers, label_head, unknown_label_head,
                 line, line_number);
-    /* TODO: Create function that gets - the argument, the address_mode and create a code accordingly */
-    /* TODO: check if the address_mode is DIRECTIVE (label) -> implement Algo 3 here */
 }
 
 void

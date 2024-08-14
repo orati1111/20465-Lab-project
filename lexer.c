@@ -31,7 +31,6 @@ bool line_is_comment(char *line) {
     return line[0] == ';';
 }
 
-/* TODO: add ic dc*/
 bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, int line_number) {
     char *cpy = NULL;
     char *ptr = NULL;
@@ -264,7 +263,7 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
     labelNode *found = NULL;
 
     /* Checking the length of the label */
-    if (strlen(label_name) > MAX_MACRO_LENGTH) {
+    if (strlen(label_name) > MAX_MACRO_LABEL_LENGTH) {
         return ERROR_LABEL_NAME_TOO_LONG;
     }
     /* Check if the name is a macro name , opcode or register.*/

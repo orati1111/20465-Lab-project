@@ -21,7 +21,7 @@
 #define NUM_OF_OPS 16
 #define NUM_OF_REGISTERS 9
 #define MAX_MSG_LENGTH 256
-#define MAX_MACRO_LENGTH 31
+#define MAX_MACRO_LABEL_LENGTH 31
 #define INITIAL_CONTENT_SIZE 64
 #define BITS_15_MAX_NUMBER 16383
 #define BITS_15_MIN_NUMBER -16384
@@ -103,15 +103,6 @@ void remove_trailing_spaces(char *str);
  * @return True if it succeeded, false otherwise.
  */
 bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head);
-
-/**
- * Function that checks if there is extra text after a given pointer.
- * @param ptr - Pointer to the location to start checking from.
- * @param string - The string to check.
- * @return True if there is, False otherwise.
- */
-bool check_extra_text(char *ptr, char *string);
-
 
 /**
  * Function that frees all the given arguments using stdargs

@@ -8,7 +8,6 @@
 #include "second_pass.h"
 
 
-/* TODO: add error and fix that it wont continue if pre assem has failed */
 int main(int argc, char *argv[]) {
     char *raw_file_name = NULL;
     Node *macro_head = NULL;
@@ -46,13 +45,10 @@ int main(int argc, char *argv[]) {
             printf("In file: %s.am\n\n", raw_file_name);
 
             start_second_pass(raw_file_name, &unknown_label_head, &label_head, (codeWord *) memory,
-                              &IC, &DC, no_error, &memory_ic_index, &memory_dc_index);
+                              &IC, &DC, no_error, &memory_ic_index);
         }
 
 
     }
-    /* TODO: why this isnt getting freed? */
-    free_list(&label_head, LABEL, ALL);
-    free_list(&unknown_label_head, UNKNOWN_LABEL, ALL);
     return 1;
 }

@@ -90,7 +90,7 @@ int add_macros_to_list(FILE *fp, Node **head) {
                 no_error = false;
                 continue;
             }
-            if (strlen(macro_name) > MAX_MACRO_LENGTH) {
+            if (strlen(macro_name) > MAX_MACRO_LABEL_LENGTH) {
                 generate_error(ERROR_LONG_MACRO_NAME, line_number,buffer);
                 cleanup("s",macro_name);
                 no_error = false;

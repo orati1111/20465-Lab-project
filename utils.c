@@ -199,14 +199,6 @@ bool macro_expansion(FILE *fp_as, char *original_file_name, Node *head) {
 
 }
 
-bool check_extra_text(char *ptr, char *string) {
-    while (*ptr != '\0' && isspace(*ptr)) {
-        ptr++;
-    }
-    return *ptr != '\0';
-}
-
-
 void cleanup(const char *order, ...) {
     va_list args;
     char *str = NULL;
@@ -387,19 +379,19 @@ int validate_commas_format(char *line) {
 
 /* TODO: change it asap */
 codeWord bitwise_or_codes(codeWord code1, codeWord code2) {
-    unsigned short int1, int2, orResult;
+    unsigned short int1, int2, or_result;
     codeWord result;
 
     /* Convert codeWord to unsigned short */
-    int1 = ((unsigned short) code1.bits[0] << 8) | code1.bits[1];
-    int2 = ((unsigned short) code2.bits[0] << 8) | code2.bits[1];
+    int1 = code1.bits[0] << 8 | code1.bits[1];
+    int2 = code2.bits[0] << 8 | code2.bits[1];
 
-    /* Perform bitwise OR */
-    orResult = int1 | int2;
+    /* bitwise OR */
+    or_result = int1 | int2;
 
-    /* Store result back in codeWord */
-    result.bits[0] = (unsigned char) (orResult >> 8);
-    result.bits[1] = (unsigned char) (orResult & 0xFF);
+    /* Store result in codeWord */
+    result.bits[0] = or_result >> 8;
+    result.bits[1] = or_result & 0xFF;
     return result;
 }
 

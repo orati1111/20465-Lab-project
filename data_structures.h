@@ -125,7 +125,7 @@ typedef struct command {
  */
 Node *create_node(void *data, size_t size_of_data, nodeType node_type);
 
-/*
+/**
  * Function that creates the macro node itself.
  * @param macro_name - The name of the macro.
  * @param macro_content - The content of the macro.

@@ -66,7 +66,6 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, cod
         /* Locate '.entry' or '.extern' */
         if (strstr(cpy, ".entry") != NULL || strstr(cpy, ".extern") != NULL) {
             construct_extern_entry(cpy, macro_head, label_head, line_number);
-            /* TODO: probably do something here */
         } else if (strstr(cpy, ".data") || strstr(cpy, ".string")) {
             instruction = construct_instruction(cpy, macro_head, label_head, line_number, *DC);
             if (instruction == NULL) {
@@ -77,8 +76,6 @@ bool start_first_pass(char *file_name, Node **macro_head, Node **label_head, cod
             }
 
         }
-            /* TODO: add that it s probably an error */
-
             /* Command */
         else {
             command = construct_command(cpy, macro_head, label_head, line_number, *IC);

@@ -3,6 +3,8 @@
 
 #define ENTRY_TO_LOCAL 0
 #define LOCAL_TO_ENTRY 1
+#define ADDRESS_SIZE 4
+#define MARGIN 1
 
 /* Boolean */
 typedef enum {
