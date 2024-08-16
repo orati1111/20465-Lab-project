@@ -71,7 +71,7 @@ bool construct_extern_entry(char *line, Node **macro_head, Node **label_head, in
     }
 
     /* Handling the label declaration */
-    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0, false);
+    temp = handle_label_decl(line, label_name, macro_head, label_head, type, line_number, 0, false, false);
     if (temp == NULL) {
         cleanup("s", cpy);
         return false;
@@ -136,7 +136,7 @@ construct_instruction(char *line, Node **macro_head, Node **label_head, int line
 
     label_name = line_is_label_decl(line);
     if (label_name != NULL) {
-        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC, false);
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, DC, false, false);
         if (temp == NULL) {
             cleanup("si", label_name, instruction);
             return NULL;
@@ -230,7 +230,7 @@ commandParts *construct_command(char *line, Node **macro_head, Node **label_head
 
     label_name = line_is_label_decl(cpy);
     if (label_name != NULL) {
-        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC, true);
+        temp = handle_label_decl(line, label_name, macro_head, label_head, LOCAL, line_number, IC, true, false);
         if (temp == NULL) {
             cleanup("sscss", cpy, label_name, command, remaining, op_name);
             return NULL;
@@ -289,11 +289,13 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
         if (found->label_type == ENTRY && type == LOCAL) {
             found->address = memory_counter;
             found->is_label_command = is_label_command;
+            found->entry_and_local = true;
             *replace_flag = ENTRY_TO_LOCAL;
             *ptr = temp;
         }
         if (found->label_type == LOCAL && type == ENTRY) {
             found->label_type = ENTRY;
+            found->entry_and_local = true;
             *replace_flag = LOCAL_TO_ENTRY;
             *ptr = temp;
         }
@@ -305,7 +307,7 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
 
 Node *
 handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
-                  unsigned short memory_counter, bool is_label_command) {
+                  unsigned short memory_counter, bool is_label_command, bool entry_and_local) {
     int error = NO_ERROR;
     int replace_flag = -1;
     labelNode *label_node = NULL;
@@ -318,7 +320,7 @@ handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_
         return NULL;
     }
     if (replace_flag != ENTRY_TO_LOCAL && replace_flag != LOCAL_TO_ENTRY) {
-        label_node = create_label_node(label_name, memory_counter, type, is_label_command);
+        label_node = create_label_node(label_name, memory_counter, type, is_label_command, entry_and_local);
         if (label_node == NULL) {
             generate_error(ERROR_COULDNT_CREATE_NODE, -1, "");
             exit(0);
@@ -496,6 +498,7 @@ int handle_arguments(char *arguments, commandParts *command, Node **macro_head) 
 }
 
 int count_arguments(char *arguments, int *error) {
+    size_t length;
     char *cpy = NULL;
     char *clean_input = NULL;
     char *token = NULL;
@@ -510,17 +513,23 @@ int count_arguments(char *arguments, int *error) {
         return ERROR_MALLOC_FAILED;
 
     clean_input = remove_spaces(cpy);
-
     if (clean_input == NULL) {
         cleanup("s", cpy);
         *error = ERROR_MALLOC_FAILED;
+        exit(1);
     }
+
 
     if (check_multiple_commas(clean_input) == true) {
         *error = ERROR_MULTIPLE_COMMAS;
         cleanup("ss", cpy, clean_input);
         return count;
     }
+    length = strlen(clean_input);
+
+    /* Checking for invalid comma at the end */
+    if(clean_input[length-1] == ',')
+        *error = ERROR_INVALID_COMMA;
 
     token = strtok(clean_input, ",");
 
@@ -531,6 +540,7 @@ int count_arguments(char *arguments, int *error) {
     cleanup("ss", cpy, clean_input);
     return count;
 }
+
 
 int validate_store_arguments(char *arguments, commandParts *command, int number_of_arguments, Node **macro_head) {
     char *arg1 = NULL;
@@ -562,19 +572,23 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
     if (number_of_arguments == 1) {
         dst_address_mode = get_address_mode(cpy, &error_dst, macro_head);
         if (error_dst != NO_ERROR) {
+            cleanup("s", cpy);
             return error_dst;
 
         } else if (dst_address_mode == NOT_LEGAL) {
+            cleanup("s", cpy);
             return ERROR_INVALID_INPUT;
         }
             /* Checking if the address mode that was found is valid according to the opcode mapping */
         else if (op_mappings[op_code].dst_mode[dst_address_mode] != 1) {
+            cleanup("s", cpy);
             return ERROR_INVALID_ADDRESS_MODE;
         }
             /* Storing the argument*/
         else {
             command->dst_mode = dst_address_mode;
-            command->dst = cpy;
+            command->dst = strdupli(cpy);
+            cleanup("s", cpy);
         }
 
     } else if (number_of_arguments == 2) {
@@ -635,6 +649,7 @@ int validate_store_arguments(char *arguments, commandParts *command, int number_
 int get_address_mode(char *argument, int *error, Node **macro_head) {
     char *ptr = NULL;
     char *temp = NULL;
+    char *token = NULL;
 
     /* Immediate */
     if ((ptr = strchr(argument, '#')) != NULL) {
@@ -693,11 +708,18 @@ int get_address_mode(char *argument, int *error, Node **macro_head) {
             cleanup("s", ptr);
             return DIRECT_REG;
         }
-        if (is_name_legal(ptr) == false || is_name_alphanumeric(ptr) == false ||
-            search_node(*macro_head, ptr, MACRO) != NULL) {
+        temp = strdupli(ptr);
+        token = temp;
+        token = strtok(token, " \t");
+        token = strtok(NULL, " \t\n");
+        if (token != NULL) {
+
+            *error = ERROR_EXTRA_TEXT_AFTER;
+        } else if (is_name_legal(ptr) == false || is_name_alphanumeric(ptr) == false ||
+                   search_node(*macro_head, ptr, MACRO) != NULL) {
             *error = ERROR_ILLEGAL_LABEL_NAME;
         }
-        cleanup("s", ptr);
+        cleanup("ss", ptr, temp);
         if (*error != NO_ERROR)
             return NOT_LEGAL;
         else

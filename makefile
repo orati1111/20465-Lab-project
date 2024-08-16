@@ -6,6 +6,10 @@
  PROG = assembler
  ARG1 = first_argument
  ARG2 = second_argument
+ ARG3 = third_argument
+ ARG4 = forth_argument
+ ARG5 = fifh_argument
+ ARG6 = sixth_argument
 
  ## Executable
 assembler: $(EXE_DEPS) $(GLOBAL_DEPS)
@@ -42,4 +46,4 @@ clean:
 	rm -rf *.o *.am *.ob *.ent *.ext
 
 val:
-	valgrind $(VALGRIND_FLAGS) ./$(PROG) $(ARG1) $(ARG2)
+	valgrind $(VALGRIND_FLAGS) ./$(PROG) $(ARG1) $(ARG2) &(ARG3) &(ARG4) &(ARG5) &(ARG6)

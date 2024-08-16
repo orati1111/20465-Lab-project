@@ -17,6 +17,7 @@ start_second_pass(char *raw_file_name, Node **unknown_labels_head, Node **label_
 
     int second_pass_error = NO_ERROR;
     char *obj_file = NULL;
+    char *ent_file = NULL;
     char *ext_file = NULL;
     FILE *obj_ptr = NULL;
 
@@ -24,6 +25,7 @@ start_second_pass(char *raw_file_name, Node **unknown_labels_head, Node **label_
     remove_unwanted_files(raw_file_name);
     ext_file = add_file_extension(raw_file_name, EXT_EXTENSION);
     obj_file = add_file_extension(raw_file_name, OBJ_EXTENSION);
+    ent_file = add_file_extension(raw_file_name, ENT_EXTENSION);
 
     /* Updating the addresses of the stored labels */
     update_label_address(*label_head, *IC, *DC);
@@ -39,16 +41,20 @@ start_second_pass(char *raw_file_name, Node **unknown_labels_head, Node **label_
         if (obj_ptr == NULL) {
             generate_error(ERROR_COULDNT_OPEN_FILE, -1, "");
             remove(ext_file);
-            cleanup("ss", obj_file, ext_file);
+            cleanup("sss", obj_file, ext_file, ent_file);
             exit(0);
         }
         write_object_file(obj_ptr, memory, *memory_ic_index, IC, DC);
-        last_iteration(raw_file_name, label_head);
-        cleanup("ss", obj_file, ext_file);
+        if (last_iteration(ent_file, label_head) != NO_ERROR) {
+            remove(ent_file);
+            remove(ext_file);
+            remove(obj_file);
+        }
+        cleanup("sss", obj_file, ext_file, ent_file);
 
     } else {
         remove(ext_file);
-        cleanup("ss", obj_file, ext_file);
+        cleanup("sss", obj_file, ext_file, ent_file);
     }
 
     free_list(label_head, LABEL, ALL);
@@ -157,20 +163,24 @@ void write_ext_ent_file(char *file_name, char *label_name, unsigned short addres
  * because extern labels can only be found as command arguments
  * and entry can be both command arguments and local declared.
  * so by iterating the unknown labels - local declared entry labels will be missed. */
-void last_iteration(char *raw_file_name, Node **label_head) {
-    char *ent_file = NULL;
+int last_iteration(char *ent_file, Node **label_head) {
     Node *temp = NULL;
     labelNode *label = NULL;
 
     temp = *label_head;
-    ent_file = add_file_extension(raw_file_name, ENT_EXTENSION);
 
     while (temp != NULL) {
         label = (labelNode *) temp->data;
         if (label->label_type == ENTRY) {
-            write_ext_ent_file(ent_file, label->label_name, label->address, ENTRY);
+            /* Checking if the given label that declared as entry is also declared locally. */
+            if (label->entry_and_local == true)
+                write_ext_ent_file(ent_file, label->label_name, label->address, ENTRY);
+            else {
+                generate_error(ERROR_ENTRY_NOT_DECLARED, -1, "");
+                return ERROR_ENTRY_NOT_DECLARED;
+            }
         }
         temp = temp->next;
     }
-    cleanup("s", ent_file);
+    return NO_ERROR;
 }

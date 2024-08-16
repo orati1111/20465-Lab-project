@@ -27,6 +27,8 @@ char *add_file_extension(char *base_file_name, char *extension) {
     size_t finalized_length = base_name_length + extension_length;
     char *finalized_file_name = NULL;
 
+    if(base_file_name == NULL)
+        return NULL;
     /* Malloc memory for the file name with the extension */
     finalized_file_name = (char *) malloc((finalized_length + 1) * sizeof(char));
     if (finalized_file_name == NULL) {

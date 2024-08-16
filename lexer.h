@@ -97,11 +97,12 @@ int validate_label_decl(char *label_name, Node **macro_head, Node **label_head, 
  * @param line_number - The number of the line.
  * @param memory_counter - The location in memory (DC or IC)
  * @param is_label_command - Flag to set if the label is a command.
+ * @param entry_and_local - Flag that checks if an entry label has a local declaration.
  * @return The node of the label, NULL otherwise.
  */
 Node *
 handle_label_decl(char *line, char *label_name, Node **macro_head, Node **label_head, labelType type, int line_number,
-                  unsigned short memory_counter, bool is_label_command);
+                  unsigned short memory_counter, bool is_label_command, bool entry_and_local);
 
 /**
  * Function that gets a .string argument and extracts the string.

@@ -32,7 +32,7 @@
 #define ERR_MSG_DATA_EMPTY "There are no numbers after .data instruction - should be one or more."
 #define ERR_MSG_INVALID_COMMA "Invalid input - invalid comma placement."
 #define ERR_MSG_MULTIPLE_COMMAS "Invalid input - multiple commas in a row."
-#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,32767] (-x for negative numbers, +x or x for positive) seperated by commas"
+#define ERR_MSG_DATA_INVALID_INPUT "Invalid .data input - accepts only whole numbers in [-16384,16383] (-x for negative numbers, +x or x for positive) seperated by commas"
 #define ERR_MSG_EXTERN_ENTRY "A label cannot be both entry and extern."
 #define ERR_MSG_UNKNOWN_OP_NAME "Unknown opcode detected."
 #define ERR_MSG_LABEL_EMPTY_DECL "Empty label declaration."
@@ -43,6 +43,8 @@
 #define ERR_MSG_IND_REG_INVALID "In address mode indirect register, There should be a register following the *."
 #define ERR_MSG_UNKNOWN_REGISTER "Unknown register name, r0-r7 are allowed."
 #define ERR_MSG_UNKNOWN_LABEL "Unknown label was given as an argument."
+#define ERR_MSG_ENTRY_NOT_DECLARED "Label was declared as entry but not locally."
+#define ERR_MSG_EXTRA_TEXT_AFTER "Extra text after a legal input - illegal"
 
 /* The Error to number mapping */
 enum {
@@ -69,6 +71,7 @@ enum {
     ERROR_EXTERN_ENTRY,
     ERROR_LABEL_EMPTY_DECL,
     ERROR_UNKNOWN_LABEL,
+    ERROR_ENTRY_NOT_DECLARED,
 
     /* Op and arguments Errors */
     ERROR_UNKNOWN_OP_NAME,
@@ -88,6 +91,7 @@ enum {
     ERROR_INVALID_COMMA,
     ERROR_MULTIPLE_COMMAS,
     ERROR_DATA_INVALID_INPUT,
+    ERROR_EXTRA_TEXT_AFTER,
 
     /* File Errors */
     ERROR_COULDNT_OPEN_FILE,

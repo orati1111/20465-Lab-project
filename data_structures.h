@@ -34,12 +34,14 @@ typedef struct macro_node {
  * short address - The memory address of the label (starts at 100)
  * LabelType label_type - The type of the label - LOCAL, EXTERN, ENTRY.
  * bool is_label_command - Flag that checks if a label is a command or instruction.
+ * bool entry_and_local - Flag that checks if an entry label has a local declaration.
  */
 typedef struct label_node {
     char *label_name;
     unsigned short address;
     labelType label_type;
     bool is_label_command;
+    bool entry_and_local;
 } labelNode;
 
 /**
@@ -139,9 +141,11 @@ macroNode *create_macro_node(char *macro_name, char *macro_content);
  * @param address - The address in memory of the label.
  * @param type - The type of label (extern, entry etc.)
  * @param is_label_command - Flag that checks if a label is a command or instruction.
+ * @param entry_and_local - Flag that checks if an entry label has a local declaration.
  * @return Pointer to the created node.
  */
-labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command);
+labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command,
+                             bool entry_and_local);
 
 /**
  *  Function that creates the unknown label node.
@@ -151,7 +155,8 @@ labelNode *create_label_node(char *label_name, unsigned short address, labelType
  *  @param line_number - The number of the line.
  *  @param IC - The IC of the encoded word.
  */
-unknownLabelNode *create_unknown_label_node(char * label_name, int memory_index, char * line, int line_number, unsigned short IC);
+unknownLabelNode *
+create_unknown_label_node(char *label_name, int memory_index, char *line, int line_number, unsigned short IC);
 
 /**
  * Function that searches a node by its name.

@@ -42,7 +42,8 @@ macroNode *create_macro_node(char *macro_name, char *macro_content) {
     return temp;
 }
 
-labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command) {
+labelNode *create_label_node(char *label_name, unsigned short address, labelType type, bool is_label_command,
+                             bool entry_and_local) {
     labelNode *temp = NULL;
     temp = malloc(sizeof(labelNode));
     if (temp == NULL)
@@ -55,6 +56,7 @@ labelNode *create_label_node(char *label_name, unsigned short address, labelType
     temp->address = address;
     temp->label_type = type;
     temp->is_label_command = is_label_command;
+    temp->entry_and_local = entry_and_local;
     return temp;
 }
 
@@ -167,12 +169,12 @@ void free_list(Node **head, nodeType node_type, freeType type) {
                 free(label_node->label_name);
             }
         }
-        /* In case the list is an unknown label list*/
-        else{
-            unknown_label_node = (unknownLabelNode *)temp->data;
-            if(unknown_label_node->label_name != NULL)
+            /* In case the list is an unknown label list*/
+        else {
+            unknown_label_node = (unknownLabelNode *) temp->data;
+            if (unknown_label_node->label_name != NULL)
                 free(unknown_label_node->label_name);
-            if(unknown_label_node->line != NULL)
+            if (unknown_label_node->line != NULL)
                 free(unknown_label_node->line);
         }
         /* Freeing each data and node */

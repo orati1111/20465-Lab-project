@@ -68,7 +68,8 @@ void write_ext_ent_file(char *file_name, char *label_name, unsigned short addres
 
 /**
  * Function that iterates the labels last time and handles the ENTRY labels.
- * @param raw_file_name - The name of the file
+ * @param ent_file - The name of the file
  * @param label_head - Double pointer to the head of the label list.
+ * @return NO_ERROR if succeeded , error_number otherwise.
  */
-void last_iteration(char *raw_file_name, Node **label_head);
+int last_iteration(char *ent_file, Node **label_head);
